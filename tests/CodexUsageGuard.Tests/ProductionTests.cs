@@ -1121,9 +1121,9 @@ internal static class ProductionTests
             .GetAwaiter()
             .GetResult();
         Equal(UpdateCheckStatus.ChannelNotConfigured, result.Status);
-        Equal("0.002", result.CurrentVersion);
+        Equal("0.003", result.CurrentVersion);
         Equal(null, result.AvailableVersion);
-        Equal("Usage Guard v.0.002", UsageGuardRelease.ProductNameWithVersion);
+        Equal("Usage Guard v.0.003", UsageGuardRelease.ProductNameWithVersion);
     }
 
     private static void GitHubUpdateChannelDetectsNewerRelease()
@@ -1131,7 +1131,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.003","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.003","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.003.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe"},{"name":"UsageGuard-Setup-0.003.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe.sha256"}]}
+            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1139,14 +1139,14 @@ internal static class ProductionTests
             .GetResult();
 
         Equal(UpdateCheckStatus.UpdateAvailable, result.Status);
-        Equal("0.003", result.AvailableVersion);
-        True(result.Message.Contains("Usage Guard v.0.003", StringComparison.Ordinal));
+        Equal("0.004", result.AvailableVersion);
+        True(result.Message.Contains("Usage Guard v.0.004", StringComparison.Ordinal));
         True(result.ReleasePage is not null);
         True(result.InstallerAsset is not null);
         True(result.ChecksumAsset is not null);
         Equal(GitHubReleaseUpdateService.LatestReleaseEndpoint,
             handler.RequestUri);
-        Equal("UsageGuard/0.002", handler.UserAgent);
+        Equal("UsageGuard/0.003", handler.UserAgent);
     }
 
     private static void GitHubUpdateChannelRejectsForeignUrl()
@@ -1154,7 +1154,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.003","html_url":"https://example.invalid/releases/tag/v0.003","draft":false,"prerelease":false,"immutable":true}
+            {"tag_name":"v0.004","html_url":"https://example.invalid/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1170,7 +1170,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.003","html_url":"https://github.com/BionicVisionary/Usage-Guard/releases/tag/v0.003","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.003.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.003/UsageGuard-Setup-0.003.exe"},{"name":"UsageGuard-Setup-0.003.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.003/UsageGuard-Setup-0.003.exe.sha256"}]}
+            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1186,10 +1186,10 @@ internal static class ProductionTests
         foreach (var json in new[]
         {
             """
-            {"tag_name":"v0.003","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.003","draft":false,"prerelease":false,"immutable":false,"assets":[]}
+            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":false,"assets":[]}
             """,
             """
-            {"tag_name":"v0.003","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.003","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.003.exe","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe"},{"name":"UsageGuard-Setup-0.003.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe.sha256"}]}
+            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
             """
         })
         {
@@ -1207,7 +1207,7 @@ internal static class ProductionTests
         True(UpdateNotificationPolicy.ShouldNotify(result, null));
         var ledger = new Dictionary<string, DateTimeOffset>
         {
-            [UpdateNotificationPolicy.KeyFor("0.003")] = BaseTime
+            [UpdateNotificationPolicy.KeyFor("0.004")] = BaseTime
         };
         False(UpdateNotificationPolicy.ShouldNotify(result, ledger));
         False(UpdateNotificationPolicy.ShouldNotify(
@@ -1224,7 +1224,7 @@ internal static class ProductionTests
         {
             [result.InstallerAsset!.AbsoluteUri] = installer,
             [result.ChecksumAsset!.AbsoluteUri] = Encoding.ASCII.GetBytes(
-                $"{hash}  UsageGuard-Setup-0.003.exe\r\n")
+                $"{hash}  UsageGuard-Setup-0.004.exe\r\n")
         });
         var prepared = new GitHubReleaseUpdateInstaller(handler)
             .DownloadAndVerifyAsync(result)
@@ -1248,7 +1248,7 @@ internal static class ProductionTests
         {
             [result.InstallerAsset!.AbsoluteUri] = installer,
             [result.ChecksumAsset!.AbsoluteUri] = Encoding.ASCII.GetBytes(
-                $"{hash}  UsageGuard-Setup-0.003.exe\r\n")
+                $"{hash}  UsageGuard-Setup-0.004.exe\r\n")
         });
         var prepared = new GitHubReleaseUpdateInstaller(handler)
             .DownloadAndVerifyAsync(result)
@@ -1266,7 +1266,7 @@ internal static class ProductionTests
         {
             [result.InstallerAsset!.AbsoluteUri] = Encoding.UTF8.GetBytes("tampered"),
             [result.ChecksumAsset!.AbsoluteUri] = Encoding.ASCII.GetBytes(
-                $"{new string('0', 64)}  UsageGuard-Setup-0.003.exe\r\n")
+                $"{new string('0', 64)}  UsageGuard-Setup-0.004.exe\r\n")
         });
         var prepared = new GitHubReleaseUpdateInstaller(handler)
             .DownloadAndVerifyAsync(result)
@@ -1281,15 +1281,15 @@ internal static class ProductionTests
         installer ??= Encoding.UTF8.GetBytes("synthetic verified installer bytes");
         var installerHash = Convert.ToHexString(SHA256.HashData(installer));
         var checksum = Encoding.ASCII.GetBytes(
-            $"{installerHash.ToLowerInvariant()}  UsageGuard-Setup-0.003.exe\r\n");
+            $"{installerHash.ToLowerInvariant()}  UsageGuard-Setup-0.004.exe\r\n");
         return new UpdateCheckResult(
             UpdateCheckStatus.UpdateAvailable,
-            "0.002",
             "0.003",
+            "0.004",
             "Update available",
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.003"),
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe"),
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.003/UsageGuard-Setup-0.003.exe.sha256"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"),
             IsImmutableRelease: true,
             installerHash,
             Convert.ToHexString(SHA256.HashData(checksum)));
@@ -2997,7 +2997,7 @@ internal static class ProductionTests
                     providerDiscovery: new ThrowingProviderDiscovery());
                 form.Size = form.MinimumSize;
                 form.PerformLayout();
-                Equal("Usage Guard v.0.002", form.Text);
+                Equal("Usage Guard v.0.003", form.Text);
                 Equal(new Size(560, 620), form.MinimumSize);
                 Equal(AutoScaleMode.Dpi, form.AutoScaleMode);
                 True(!string.IsNullOrWhiteSpace(form.AccessibleName));

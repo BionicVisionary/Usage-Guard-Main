@@ -3,16 +3,16 @@
 ## Shareable package
 
 The Release package is a self-contained Windows x64 ZIP plus an unsigned,
-console-free `UsageGuard-Setup-0.002.exe` bootstrapper compiled with the built-in
+console-free `UsageGuard-Setup-0.003.exe` bootstrapper compiled with the built-in
 Windows .NET Framework toolchain. The recipient does not
 need a separate .NET runtime or administrator rights. Run the setup executable,
 or extract the ZIP and run `Install.cmd`. Use
 `Install-With-Codex-Integration.cmd` only to add the optional Codex skill during
 installation; Codex and Claude can also be configured later from the popup.
-Because 0.002 is not code-signed, recipients should expect an unknown-publisher
+Because 0.003 is not code-signed, recipients should expect an unknown-publisher
 warning and compare the SHA-256 published with the release.
-Distribute `UsageGuard-Setup-0.002.exe` together with
-`UsageGuard-Setup-0.002.exe.sha256`; future in-window updates require both exact
+Distribute `UsageGuard-Setup-0.003.exe` together with
+`UsageGuard-Setup-0.003.exe.sha256`; future in-window updates require both exact
 assets on a non-draft immutable GitHub Release. Usage Guard also requires the
 public GitHub API's SHA-256 digest for both assets, verifies the checksum file
 against its digest, and verifies the installer against both that checksum and

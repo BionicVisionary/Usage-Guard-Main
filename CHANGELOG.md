@@ -1,5 +1,13 @@
 # Usage Guard changes
 
+## 0.003 — provenance-correct updater acceptance release
+
+- Rebuilds the same credential-free public updater from its final committed
+  source so the executable's informational version names the exact release
+  commit.
+- Uses v.0.002 as the genuine older installed version for an end-to-end
+  credential-free in-app update acceptance check.
+
 ## 0.002 — public updater and publication safety
 
 - Makes the fixed GitHub Releases updater usable without a GitHub account or

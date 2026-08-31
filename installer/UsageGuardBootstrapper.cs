@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 internal static class UsageGuardBootstrapper
 {
-    private const string Version = "0.002";
+    private const string Version = "0.003";
 
     [STAThread]
     private static void Main(string[] args)

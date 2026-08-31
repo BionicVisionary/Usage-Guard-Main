@@ -1,6 +1,6 @@
 # Usage Guard
 
-Usage Guard v.0.002 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
+Usage Guard v.0.003 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
 
 The helper does not read credentials, authentication files, cookies, browser state, chats, account identifiers, screenshots, or unrelated UI. Provider monitoring has no direct HTTP client or private endpoint; the only HTTP capability is the separate bounded public GitHub release checker and user-confirmed installer download. It has no task/thread control, reset-credit action, service, administrator component, or production simulation switch. App Server responses exist only in bounded process memory until exactly one 300-minute and one 10,080-minute quota window are normalized.
 
@@ -90,12 +90,12 @@ can supply its declared windows to the same fail-closed multi-window policy.
 ## Shareable Windows package
 
 `scripts/New-Package.ps1` creates both a self-contained `win-x64` ZIP and a
-console-free Windows `UsageGuard-Setup-0.002.exe` bootstrapper plus its matching
+console-free Windows `UsageGuard-Setup-0.003.exe` bootstrapper plus its matching
 `.sha256` file. Recipients can
 run `Install.cmd` for the standalone popup/monitor or deliberately choose
 `Install-With-Codex-Integration.cmd` to add the optional Codex phase-boundary
 skill. Neither path requests administrator rights. The install directory is
-configurable; for example, `D:\Apps\Usage Guard`. The 0.002
+configurable; for example, `D:\Apps\Usage Guard`. The 0.003
 installer is unsigned, so Windows may show
 an unknown-publisher warning; recipients should compare its published SHA-256.
 
@@ -104,7 +104,7 @@ shortcuts for Usage Guard + Codex and Usage Guard + Claude. It does not replace
 the providers' original shortcuts or run a process watcher. Starting an AI from
 its original icon intentionally bypasses this convenience feature.
 
-The 0.002 UI checks the fixed public GitHub Releases channel at startup and every
+The 0.003 UI checks the fixed public GitHub Releases channel at startup and every
 six hours, independently of provider polling, and de-duplicates notifications by
 version. **Check for updates** lets the user install inside Usage Guard: it
 downloads exactly one version-matched setup executable and `.sha256` asset,
