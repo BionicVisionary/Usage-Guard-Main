@@ -1,0 +1,17 @@
+# Visual Studio and .NET build output
+.vs/
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+artifacts/
+/CodexUsageGuard.exe
+*.user
+*.suo
+
+# Local logs and temporary files
+*.log
+*.tmp
+
+# OS metadata
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Version>0.0.2</Version>
+    <AssemblyVersion>0.0.2.0</AssemblyVersion>
+    <FileVersion>0.0.2.0</FileVersion>
+    <InformationalVersion>0.002</InformationalVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Historical accessibility feasibility sources remain auditable in Git
+         but are deliberately absent from the production desktop binary. -->
+    <Compile Remove="Windows\SupervisedWindowStateTestMode.cs" />
+    <Compile Remove="Windows\WindowsCodexAccessibilityProbe.cs" />
+    <EmbeddedResource Include="..\..\.agents\skills\codex-usage-guard\SKILL.md" LogicalName="UsageGuard.CodexIntegration.SKILL.md" />
+    <EmbeddedResource Include="..\..\.agents\skills\codex-usage-guard\scripts\check_usage.ps1" LogicalName="UsageGuard.CodexIntegration.scripts.check_usage.ps1" />
+    <EmbeddedResource Include="..\..\.agents\skills\codex-usage-guard\scripts\invoke_guard_process.ps1" LogicalName="UsageGuard.CodexIntegration.scripts.invoke_guard_process.ps1" />
+    <EmbeddedResource Include="..\..\.agents\skills\claude-usage-guard\SKILL.md" LogicalName="UsageGuard.ClaudeIntegration.SKILL.md" />
+    <EmbeddedResource Include="..\..\.agents\skills\claude-usage-guard\scripts\check_usage.ps1" LogicalName="UsageGuard.ClaudeIntegration.scripts.check_usage.ps1" />
+    <EmbeddedResource Include="..\..\.agents\skills\claude-usage-guard\scripts\invoke_guard_process.ps1" LogicalName="UsageGuard.ClaudeIntegration.scripts.invoke_guard_process.ps1" />
+    <EmbeddedResource Include="..\..\integrations\claude\claude-statusline.ps1" LogicalName="UsageGuard.ClaudeIntegration.claude-statusline.ps1" />
+  </ItemGroup>
+</Project>

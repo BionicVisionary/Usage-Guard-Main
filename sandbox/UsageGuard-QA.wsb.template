@@ -1,0 +1,25 @@
+<Configuration>
+  <VGpu>Disable</VGpu>
+  <Networking>Disable</Networking>
+  <AudioInput>Disable</AudioInput>
+  <VideoInput>Disable</VideoInput>
+  <ProtectedClient>Enable</ProtectedClient>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <ClipboardRedirection>Disable</ClipboardRedirection>
+  <MemoryInMB>4096</MemoryInMB>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>{{INPUT_HOST_FOLDER}}</HostFolder>
+      <SandboxFolder>C:\UsageGuardQA\Input</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>{{EVIDENCE_HOST_FOLDER}}</HostFolder>
+      <SandboxFolder>C:\UsageGuardQA\Evidence</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\UsageGuardQA\Input\Run-GuestQa.ps1 -InputRoot C:\UsageGuardQA\Input -EvidenceRoot C:\UsageGuardQA\Evidence</Command>
+  </LogonCommand>
+</Configuration>
