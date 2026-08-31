@@ -35,18 +35,24 @@ without a license permits viewing and downloading through GitHub but does not
 grant general reuse rights. Adding an open-source license is a separate owner
 decision and is not inferred by this sanitation work.
 
-## Public update-channel acceptance
+## Public update-channel acceptance — passed for v.0.003
 
-Before calling the update channel public, verify all of the following:
+The following were verified after the sanitized replacement history was made
+public:
 
-- an unauthenticated request to the fixed GitHub latest-release endpoint returns
-  the expected immutable release rather than `404`;
+- an unauthenticated request to the fixed GitHub latest-release endpoint returned
+  the expected immutable v.0.003 release rather than `404`;
 - the exact installer and checksum assets download without credentials;
 - GitHub reports the release immutable and exposes independent SHA-256 digests
   for both exact assets;
 - the downloaded checksum matches its GitHub digest and the downloaded
   installer matches both the checksum and its separate GitHub digest;
 - Usage Guard reports the current release as up to date without exposing raw
-  response data; and
+  response data;
 - the repository remains free of diagnostic transcript branches and old remote
   feature branches.
+
+All checks passed. Remote `main` contains only sanitized replacement history,
+the repository is public, Release `v0.003` is immutable, and recipients need no
+GitHub account or credentials. The repository intentionally still has no
+licence file.

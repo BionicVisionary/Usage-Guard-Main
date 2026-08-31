@@ -48,9 +48,9 @@ consumes a usage-reset credit.
 | 5 | Implement accessible WinForms popup and notification-area behavior | Complete; actual-form renderer inspected, live capture bridge limitation recorded |
 | 6 | Implement opt-in user-scoped startup | Complete |
 | 7 | Align the repository skill and installed integration with normal configured enforcement | Complete; WinExe stream boundary repaired |
-| 8 | Run unit, integration, security, UI, lifecycle, and performance verification | Complete: 171 tests, dual PowerShell parsing, focused security review, installed lifecycle/UI checks, and performance evidence are recorded |
-| 9 | Package, install for the current user, hash-check, and prove rollback boundaries | Complete: final installed executable and package hashes match; immutable Release `v0.001` contains the attested installer, checksum, and ZIP |
-| 10 | Launch the popup for supervised acceptance and record live versus synthetic evidence separately | Complete for v.0.001: genuine Codex and Claude observations, Desktop limitation, final installed popup, and synthetic/live distinctions are recorded |
+| 8 | Run unit, integration, security, UI, lifecycle, and performance verification | Complete: 172 tests, dual PowerShell parsing, focused security review, installed lifecycle/UI checks, and performance evidence are recorded |
+| 9 | Package, install for the current user, hash-check, and prove rollback boundaries | Complete: final installed v.0.003 executable and package hashes match; immutable public Release `v0.003` contains the installer, checksum, and ZIP |
+| 10 | Launch the popup for supervised acceptance and record live versus synthetic evidence separately | Complete for v.0.003: exact-window UI captures, genuine credential-free updater evidence, final installed popup, and synthetic/live distinctions are recorded |
 
 ## State contract
 

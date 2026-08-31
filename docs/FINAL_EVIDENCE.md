@@ -1,4 +1,85 @@
-# Usage Guard v.0.001 release evidence — 2026-08-31
+# Usage Guard release evidence
+
+## v.0.003 public updater acceptance — 2026-08-31
+
+The public repository is
+`https://github.com/BionicVisionary/Usage-Guard-Main`. Remote `main` contains
+only the sanitized replacement history, including the provenance-correct
+v.0.003 release commit and its final evidence record. Old releases, diagnostic
+branches, and feature branches were removed before visibility changed; no
+open-source licence was added.
+
+Immutable GitHub Release `v0.003` targets exact commit
+`7d80553097a0bcfe4b93616a97f0107a8d4fc709`:
+
+- `UsageGuard-Setup-0.003.exe`: 67,959,808 bytes, SHA-256
+  `28279F81741C3D0EB3845E59B593ECF1A9722424C2BD57CF7E1F3C144109830D`;
+- `UsageGuard-Setup-0.003.exe.sha256`: 94 bytes, SHA-256
+  `588A8F72A115D66B5C1A44D92678AC9DE7172A4FD6DA4CAF75F33DC290562937`;
+- `UsageGuard-0.003-win-x64.zip`: 67,945,132 bytes, SHA-256
+  `6C1997D9BFCB50AE44EC3BFFD23D009FCE5069A0645668805166418F767A326A`;
+- packaged executable: SHA-256
+  `17D21152DA370640AE8DA63524AB9B61CED41E03A84B3287D6A663129C938C50`,
+  product version
+  `0.003+7d80553097a0bcfe4b93616a97f0107a8d4fc709`.
+
+Credential-free updater evidence:
+
+- the public latest-release endpoint returned HTTP 200 without an
+  `Authorization` header;
+- a fresh HTTP client with default credentials disabled downloaded the exact
+  setup and checksum assets and matched both GitHub SHA-256 digests plus the
+  checksum line;
+- the installed v.0.002 application recorded exactly `Update:0.003` after a
+  normal restart, proving its real automatic in-app checker observed the new
+  public release;
+- the production `GitHubReleaseUpdateService` reported v.0.003 `UpToDate`, and
+  the production `GitHubReleaseUpdateInstaller` prepared the genuine v.0.003
+  installer as `Ready` with the expected hash and no authorization value;
+- that owned temporary download was deleted after verification. No GitHub CLI,
+  GitHub account, or GitHub token is required by recipients.
+
+Final installed evidence:
+
+- installed path: `<user-selected-install-directory>\CodexUsageGuard.exe`;
+- installed SHA-256 matches the packaged executable exactly;
+- settings and provider-catalog hashes remained unchanged across both upgrades;
+- the current-user Codex skill wrapper still returns one sanitized decision;
+- the explicit unrestricted-development override remained enabled as required
+  by this Goal.
+
+Release build completed with zero warnings/errors, `dotnet format` reported no
+changes, and **172 synthetic tests passed**. The dependency inventory contains
+zero third-party packages. Current-tree privacy scans found no workstation
+username, private absolute development path, high-confidence API token, or
+private-key marker.
+
+The exact installed v.0.003 QA process produced `artifacts/ui-evidence-v0.003`
+using only its opt-in single-display mode and dedicated keyboard chords. Both
+Codex and Claude captures were visually inspected: version text, tab-specific
+controls, independent monitoring state, scrolling, borders, and override state
+were readable without clipping, duplicate frames, or horizontal scrolling.
+
+Final installed performance on the authorized single 1920x1080 display:
+
+- cold visible/responsive: 1,753.2 ms;
+- minimized reopen visible/responsive: 793.8 ms;
+- full restart visible/responsive: 1,767.4 ms;
+- ordinary second-instance signal: 102.0 ms with one primary process;
+- active, idle, and restart samples: 0% CPU; GPU average/peak 0%; working set
+  63.14–63.22 MiB; private memory 18.52–18.67 MiB;
+- every sample was responsive and graceful shutdown left zero processes.
+
+Residual limits: the installer is not Authenticode-signed, so Windows can show
+an unknown-publisher warning. Immutable GitHub metadata and three-way hash
+verification protect downloads from accidental corruption or post-publication
+asset replacement, but cannot protect against compromise of the GitHub
+publisher account before a malicious release is published. SafeWrap remains
+advisory and phase-boundary based. Claude live values remain response-driven
+and unavailable when the documented status-line source has not produced both
+required windows.
+
+## Historical v.0.001 evidence — 2026-08-31
 
 ## Candidate and release state
 
