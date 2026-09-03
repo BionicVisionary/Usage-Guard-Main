@@ -413,3 +413,23 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
 - **Evidence/limits:** Reproduced at commit `3fe20c5` on the exFAT F: clone on
   2026-08-29. The complete suite must pass from that clone before it becomes
   the canonical development checkout.
+
+## Usage reaches zero after an earlier Normal or Warning result
+
+- **Symptom/scope:** An agent consulted the guard, then a long Sandbox, build,
+  release, research, or QA phase exhausted usage before the next check.
+- **Confirmed cause:** A result is a point-in-time phase-admission decision, not
+  continuous enforcement or reserved capacity. One open-ended phase can consume
+  all headroom above SafeWrap.
+- **Avoid:** Treating Normal as permission for an unbounded phase, relying on
+  Critical SafeWrap to interrupt a running phase, or adding frequent polling.
+- **Verified method:** Use conservative thresholds, split high or uncertain
+  usage work into short recoverable checkpoints, and invoke the installed skill
+  at every material checkpoint. Warning permits only a short bounded checkpoint;
+  SafeWrap or Unknown starts no new phase. Keep the genuine provider-reset
+  one-shot behavior separate from checkpoint sizing.
+- **Evidence/limits:** On 2026-09-03 a NetSwitch task checked at 31% and 24%,
+  then began a long Sandbox pass and exhausted usage before another boundary.
+  The thresholds were restored to 30/25/20 for both windows on 2026-09-04.
+  Thresholds reduce risk but cannot predict phase cost, so fresh checkpoints
+  remain necessary.

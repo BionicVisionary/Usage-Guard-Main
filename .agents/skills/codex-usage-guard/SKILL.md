@@ -63,13 +63,21 @@ deduplicate again. The wake-up is a recheck, never permission to resume by time.
 - `override_active`: usage-based gating is explicitly disabled, so the new
   material phase may start. This state persists until the user manually turns
   it off in the helper.
-- `normal`: the new material phase may start.
-- `warning`: the new material phase may start, but consult again at the next
-  material boundary.
+- `normal`: a bounded new material phase may start.
+- `warning`: only a short, recoverable checkpoint may start; consult again at
+  its next material boundary.
 - `safe_wrap` or Unknown: start no new build, research, release, or delegation
   phase. Finish only the already-active coherent checkpoint, perform necessary
   safe cleanup or state restoration, record a truthful handoff, and commit only
   when that commit is normally authorized and coherent.
+
+Every result is a point-in-time phase-admission decision, not continuous
+monitoring or proof that an open-ended phase fits before the next threshold.
+Before Sandbox/VM work, deep QA, builds, releases, research, or another high or
+uncertain usage phase, split work into short recoverable checkpoints and invoke
+this skill at each checkpoint. Never begin a long or open-ended phase when
+usage could cross SafeWrap before the next check. Threshold ownership remains
+with the installed helper; do not infer percentages.
 
 Do not interrupt in-flight commands, discard work, cancel or control tasks, send
 instructions to other tasks, create recurring monitoring, or claim this is a

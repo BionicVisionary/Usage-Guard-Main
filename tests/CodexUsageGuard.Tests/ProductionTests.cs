@@ -3530,6 +3530,12 @@ internal static class ProductionTests
         True(UsageIntegrationInstructions.CodexAgreement.Contains(
             "never consume a usage-reset credit automatically",
             StringComparison.OrdinalIgnoreCase));
+        True(UsageIntegrationInstructions.CodexAgreement.Contains(
+            "point-in-time phase-admission decision",
+            StringComparison.Ordinal));
+        True(UsageIntegrationInstructions.CodexAgreement.Contains(
+            "Never begin a long or open-ended phase",
+            StringComparison.Ordinal));
     }
 
     private static void EmbeddedCodexIntegrationMatchesRepository()

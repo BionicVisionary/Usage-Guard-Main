@@ -66,6 +66,12 @@ Closing the popup hides it to the notification area when that option and monitor
 - **Reset detected:** a fresh trusted live observation proved a different quota-window reset key. An old latch clears only when that specific new window is above SafeWrap.
 - **Override active:** usage-based gating is explicitly disabled. The underlying live/latch state remains visible and intact. Only a deliberate user action can disable the override.
 
+Every state is a point-in-time observation. Normal does not reserve enough
+usage for an unbounded phase, and Warning permits only a short recoverable
+checkpoint followed by another check. Split Sandbox/VM work, deep QA, builds,
+releases, research, and other high or uncertain usage phases into short
+checkpoints so SafeWrap cannot be crossed unnoticed during one open-ended phase.
+
 ## Settings
 
 - **Warning threshold:** default 30% remaining.

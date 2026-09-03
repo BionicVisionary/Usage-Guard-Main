@@ -18,7 +18,8 @@ public static class UsageIntegrationInstructions
         "<!-- BEGIN CODEX USAGE GUARD WORKING AGREEMENT -->\r\n" +
         "## Usage Guard normal enforcement\r\n\r\n" +
         "- Before substantive multi-phase work, each new material phase, or additional delegation, consult the installed `codex-usage-guard` skill and obey its configured decision.\r\n" +
-        "- Normal or Warning permits a new phase. SafeWrap or Unknown permits only finishing the already-active coherent checkpoint, safe cleanup, and a truthful handoff; start no new phase.\r\n" +
+        "- Normal permits a bounded new phase. Warning permits only a short recoverable checkpoint followed by another check. SafeWrap or Unknown permits only finishing the already-active coherent checkpoint, safe cleanup, and a truthful handoff; start no new phase.\r\n" +
+        "- Every result is a point-in-time phase-admission decision, not continuous monitoring or proof that an open-ended phase will fit. Split Sandbox/VM work, deep QA, builds, releases, research, and other high or uncertain usage work into short recoverable checkpoints and recheck at each checkpoint. Never begin a long or open-ended phase when usage could cross SafeWrap before the next check.\r\n" +
         "- Critical SafeWrap is urgent but remains checkpoint-safe. Never interrupt in-flight commands, discard coherent work, cancel tasks, or claim a hard global stop.\r\n" +
         "- If Usage Guard returns a fresh, genuine reset recommendation and the local one-shot wake-up setting is enabled, an agent may schedule or update one deduplicated same-task wake-up only after the checkpoint and cleanup are complete. It must delete itself when it fires and recheck Usage Guard before resuming; time alone never permits work and short-interval polling is forbidden.\r\n" +
         "- Never consume a usage-reset credit automatically.\r\n" +

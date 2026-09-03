@@ -20,6 +20,12 @@ The helper does not read credentials, authentication files, cookies, browser sta
 
 SafeWrap is advisory and checkpoint-based: finish the current coherent checkpoint and start no new material phase. The lower Critical SafeWrap threshold marks greater urgency inside that same behavior; it never instantly stops or cancels a task. Neither state kills, interrupts, enumerates, messages, or controls Codex tasks. Unknown fails closed under normal enforcement but is never described as a genuine threshold event.
 
+A Normal or Warning result is a point-in-time phase-admission decision, not a
+continuous monitor or a reservation of usage. Agents must split Sandbox/VM,
+deep QA, build, release, research, and other high or uncertain usage work into
+short recoverable checkpoints and recheck at each checkpoint. Warning permits
+only a short bounded checkpoint, not a long or open-ended phase.
+
 When the local one-shot reset wake-up preference is enabled, the installed
 Codex skill may create or update one deduplicated same-task wake-up only after
 the agent has finished its coherent checkpoint, completed cleanup, and become
