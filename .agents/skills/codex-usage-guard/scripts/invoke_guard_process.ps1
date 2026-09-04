@@ -329,9 +329,12 @@ function ConvertFrom-CodexUsageGuardDecisionOutput {
             [string]::IsNullOrWhiteSpace([string]$Resume.recommendedAtLocalDisplay) -or
             ([string]$Resume.resetIdentity) -notmatch '^[0-9a-f]{24}$' -or
             $ResumeWindows.Count -notin @(1, 2) -or
-            $Decision.source -ne 'live_app_server' -or
+            $Decision.source -notin @('live_app_server', 'genuine_live_latch') -or
             $Decision.confidence -ne 'high' -or
-            $Decision.freshness -ne 'observed_now') {
+            $Decision.freshness -ne 'observed_now' -or
+            -not $Decision.isSuccessfulLiveObservation -or
+            -not $HasWindows -or @($Decision.windows).Count -ne 2 -or
+            -not $HasControllingWindow) {
             throw 'codex-usage-guard returned untrusted resume metadata'
         }
     }
@@ -358,7 +361,8 @@ function ConvertFrom-CodexUsageGuardDecisionOutput {
             }
         }
         'safe_wrap' {
-            $FreshLive = $Decision.source -eq 'live_app_server' -and
+            $FreshLive = $Decision.source -in @(
+                    'live_app_server', 'genuine_live_latch') -and
                 $Decision.confidence -eq 'high' -and
                 $Decision.freshness -eq 'observed_now' -and
                 $HasRemaining -and $HasReset -and

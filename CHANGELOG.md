@@ -1,5 +1,17 @@
 # Usage Guard changes
 
+## 0.004 — user-authoritative settings and latch re-evaluation
+
+- Makes the in-app Apply action authoritative for the user's exact thresholds.
+  With fresh trusted same-window evidence, Apply retires only a latch that is
+  above the newly applied SafeWrap threshold and immediately re-evaluates.
+- Preserves latches for external settings-file edits, stale/Unknown evidence,
+  different quota windows, and percentages still inside SafeWrap.
+- Keeps fresh live latch decisions machine-readable as live evidence so the
+  validated reset recommendation is not rejected by the installed wrapper.
+- Declares settings, override, and latch controls user-owned; agents read and
+  obey them and cannot substitute their preferred defaults.
+
 ## 0.003 — provenance-correct updater acceptance release
 
 - Rebuilds the same credential-free public updater from its final committed

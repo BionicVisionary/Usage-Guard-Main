@@ -65,6 +65,7 @@ internal static class ProductionTests
         yield return ("override exposes underlying live state", OverrideExposesUnderlyingState);
         yield return ("override removal restores latch enforcement", OverrideRemovalRestoresLatch);
         yield return ("genuine live safe-wrap creates reset latch", GenuineLiveCreatesLatch);
+        yield return ("fresh live latch remains valid machine-readable evidence", FreshLiveLatchUsesLiveSource);
         yield return ("five-hour SafeWrap resume uses the exact live reset", FiveHourResumeUsesExactLiveReset);
         yield return ("weekly SafeWrap resume uses the exact live reset", WeeklyResumeUsesExactLiveReset);
         yield return ("both constraining windows resume after the later exact reset", BothConstraintsResumeAfterLatestExactReset);
@@ -110,6 +111,9 @@ internal static class ProductionTests
         yield return ("monitor cancellation stops cleanly", MonitorCancellationStopsCleanly);
         yield return ("monitor recovers failure counter after success", MonitorFailureCounterRecovers);
         yield return ("monitor reloads externally changed validated settings", MonitorReloadsExternalSettings);
+        yield return ("user Apply releases only obsolete current-window latches", UserApplyReleasesObsoleteLatch);
+        yield return ("external settings edits cannot release a latch", ExternalSettingsCannotReleaseLatch);
+        yield return ("user Apply preserves a latch without fresh live evidence", UserApplyPreservesLatchWithoutFreshEvidence);
         yield return ("app server caller cancellation cleans owned transport", AppServerCancellationCleansTransport);
         yield return ("configured output contains no raw protocol", ConfiguredOutputIsSanitized);
         yield return ("production rejects simulation arguments", ProductionRejectsSimulationArguments);
@@ -1121,9 +1125,9 @@ internal static class ProductionTests
             .GetAwaiter()
             .GetResult();
         Equal(UpdateCheckStatus.ChannelNotConfigured, result.Status);
-        Equal("0.003", result.CurrentVersion);
+        Equal("0.004", result.CurrentVersion);
         Equal(null, result.AvailableVersion);
-        Equal("Usage Guard v.0.003", UsageGuardRelease.ProductNameWithVersion);
+        Equal("Usage Guard v.0.004", UsageGuardRelease.ProductNameWithVersion);
     }
 
     private static void GitHubUpdateChannelDetectsNewerRelease()
@@ -1131,7 +1135,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
+            {"tag_name":"v0.005","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.005","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.005.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe"},{"name":"UsageGuard-Setup-0.005.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe.sha256"}]}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1139,14 +1143,14 @@ internal static class ProductionTests
             .GetResult();
 
         Equal(UpdateCheckStatus.UpdateAvailable, result.Status);
-        Equal("0.004", result.AvailableVersion);
-        True(result.Message.Contains("Usage Guard v.0.004", StringComparison.Ordinal));
+        Equal("0.005", result.AvailableVersion);
+        True(result.Message.Contains("Usage Guard v.0.005", StringComparison.Ordinal));
         True(result.ReleasePage is not null);
         True(result.InstallerAsset is not null);
         True(result.ChecksumAsset is not null);
         Equal(GitHubReleaseUpdateService.LatestReleaseEndpoint,
             handler.RequestUri);
-        Equal("UsageGuard/0.003", handler.UserAgent);
+        Equal("UsageGuard/0.004", handler.UserAgent);
     }
 
     private static void GitHubUpdateChannelRejectsForeignUrl()
@@ -1154,7 +1158,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.004","html_url":"https://example.invalid/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true}
+            {"tag_name":"v0.005","html_url":"https://example.invalid/releases/tag/v0.005","draft":false,"prerelease":false,"immutable":true}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1170,7 +1174,7 @@ internal static class ProductionTests
         var handler = new StaticHttpHandler(
             HttpStatusCode.OK,
             """
-            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
+            {"tag_name":"v0.005","html_url":"https://github.com/BionicVisionary/Usage-Guard/releases/tag/v0.005","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.005.exe","digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.005/UsageGuard-Setup-0.005.exe"},{"name":"UsageGuard-Setup-0.005.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard/releases/download/v0.005/UsageGuard-Setup-0.005.exe.sha256"}]}
             """);
         var result = new GitHubReleaseUpdateService(handler)
             .CheckAsync()
@@ -1186,10 +1190,10 @@ internal static class ProductionTests
         foreach (var json in new[]
         {
             """
-            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":false,"assets":[]}
+            {"tag_name":"v0.005","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.005","draft":false,"prerelease":false,"immutable":false,"assets":[]}
             """,
             """
-            {"tag_name":"v0.004","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.004.exe","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"},{"name":"UsageGuard-Setup-0.004.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"}]}
+            {"tag_name":"v0.005","html_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.005","draft":false,"prerelease":false,"immutable":true,"assets":[{"name":"UsageGuard-Setup-0.005.exe","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe"},{"name":"UsageGuard-Setup-0.005.exe.sha256","digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","browser_download_url":"https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe.sha256"}]}
             """
         })
         {
@@ -1207,7 +1211,7 @@ internal static class ProductionTests
         True(UpdateNotificationPolicy.ShouldNotify(result, null));
         var ledger = new Dictionary<string, DateTimeOffset>
         {
-            [UpdateNotificationPolicy.KeyFor("0.004")] = BaseTime
+            [UpdateNotificationPolicy.KeyFor("0.005")] = BaseTime
         };
         False(UpdateNotificationPolicy.ShouldNotify(result, ledger));
         False(UpdateNotificationPolicy.ShouldNotify(
@@ -1224,7 +1228,7 @@ internal static class ProductionTests
         {
             [result.InstallerAsset!.AbsoluteUri] = installer,
             [result.ChecksumAsset!.AbsoluteUri] = Encoding.ASCII.GetBytes(
-                $"{hash}  UsageGuard-Setup-0.004.exe\r\n")
+                $"{hash}  UsageGuard-Setup-0.005.exe\r\n")
         });
         var prepared = new GitHubReleaseUpdateInstaller(handler)
             .DownloadAndVerifyAsync(result)
@@ -1266,7 +1270,7 @@ internal static class ProductionTests
         {
             [result.InstallerAsset!.AbsoluteUri] = Encoding.UTF8.GetBytes("tampered"),
             [result.ChecksumAsset!.AbsoluteUri] = Encoding.ASCII.GetBytes(
-                $"{new string('0', 64)}  UsageGuard-Setup-0.004.exe\r\n")
+                $"{new string('0', 64)}  UsageGuard-Setup-0.005.exe\r\n")
         });
         var prepared = new GitHubReleaseUpdateInstaller(handler)
             .DownloadAndVerifyAsync(result)
@@ -1281,15 +1285,15 @@ internal static class ProductionTests
         installer ??= Encoding.UTF8.GetBytes("synthetic verified installer bytes");
         var installerHash = Convert.ToHexString(SHA256.HashData(installer));
         var checksum = Encoding.ASCII.GetBytes(
-            $"{installerHash.ToLowerInvariant()}  UsageGuard-Setup-0.004.exe\r\n");
+            $"{installerHash.ToLowerInvariant()}  UsageGuard-Setup-0.005.exe\r\n");
         return new UpdateCheckResult(
             UpdateCheckStatus.UpdateAvailable,
-            "0.003",
             "0.004",
+            "0.005",
             "Update available",
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.004"),
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe"),
-            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.004/UsageGuard-Setup-0.004.exe.sha256"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/tag/v0.005"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe"),
+            new Uri("https://github.com/BionicVisionary/Usage-Guard-Main/releases/download/v0.005/UsageGuard-Setup-0.005.exe.sha256"),
             IsImmutableRelease: true,
             installerHash,
             Convert.ToHexString(SHA256.HashData(checksum)));
@@ -1422,6 +1426,42 @@ internal static class ProductionTests
         Equal(BaseTime.AddDays(1),
             evaluation.PersistentState.LatchedWeeklyResetAtUtc);
         Equal(BaseTime, evaluation.PersistentState.LatchCreatedAtUtc);
+    }
+
+    private static void FreshLiveLatchUsesLiveSource()
+    {
+        var reset = BaseTime.AddDays(3);
+        var first = ConfiguredGuardEvaluator.Evaluate(
+            EnforcingSettings() with { ResetWakeUpEnabled = true },
+            GuardPersistentState.Empty,
+            AvailableWithWindowDetails(
+                90m,
+                BaseTime.AddHours(4),
+                25m,
+                reset),
+            BaseTime);
+        var lowered = EnforcingSettings() with
+        {
+            SafeWrapThresholdPercent = 7m,
+            CriticalBufferPercent = 5m,
+            ResetWakeUpEnabled = true
+        };
+        var second = ConfiguredGuardEvaluator.Evaluate(
+            lowered,
+            first.PersistentState,
+            AvailableWithWindowDetails(
+                90m,
+                BaseTime.AddHours(4),
+                25m,
+                reset,
+                BaseTime.AddMinutes(1)),
+            BaseTime.AddMinutes(1));
+
+        Equal(GuardRuntimeState.SafeWrap, second.Display.Decision);
+        Equal(GuardDecisionReason.GenuineLatchActive, second.Display.Reason);
+        Equal(GuardDecisionSource.LiveAppServer, second.Display.Source);
+        Equal(GuardResumeStatus.Recommended,
+            second.Display.ResumeRecommendation!.Status);
     }
 
     private static void FiveHourResumeUsesExactLiveReset()
@@ -2362,6 +2402,97 @@ internal static class ProductionTests
         }
     }
 
+    private static void UserApplyReleasesObsoleteLatch()
+    {
+        var storage = new InMemoryStorage();
+        var monitor = new UsageMonitor(
+            new QueueSource(AvailableWithWindows(95m, 25m)),
+            storage,
+            new ConstantClock(BaseTime));
+        try
+        {
+            Equal(GuardRuntimeState.SafeWrap,
+                monitor.CheckNowAsync().GetAwaiter().GetResult().Decision);
+            True(monitor.PersistentState.LatchedWeeklyResetAtUtc is not null);
+
+            var userSettings = monitor.Settings with
+            {
+                SafeWrapThresholdPercent = 7m,
+                CriticalBufferPercent = 5m
+            };
+            monitor.UpdateSettings(
+                userSettings,
+                SettingsUpdateAuthority.UserApply);
+
+            Equal(GuardRuntimeState.Warning, monitor.Current.Decision);
+            Equal(GuardDecisionSource.LiveAppServer, monitor.Current.Source);
+            Equal(null, monitor.PersistentState.LatchedWeeklyResetAtUtc);
+            Equal(null, monitor.PersistentState.LatchCreatedAtUtc);
+            Equal(7m, storage.LoadSettings().Settings.SafeWrapThresholdPercent);
+        }
+        finally
+        {
+            monitor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    private static void ExternalSettingsCannotReleaseLatch()
+    {
+        var storage = new InMemoryStorage();
+        var monitor = new UsageMonitor(
+            new QueueSource(
+                AvailableWithWindows(95m, 25m),
+                AvailableWithWindows(95m, 25m)),
+            storage,
+            new ConstantClock(BaseTime));
+        try
+        {
+            monitor.CheckNowAsync().GetAwaiter().GetResult();
+            storage.SetExternalSettings(monitor.Settings with
+            {
+                SafeWrapThresholdPercent = 7m,
+                CriticalBufferPercent = 5m
+            });
+
+            var result = monitor.CheckNowAsync().GetAwaiter().GetResult();
+            Equal(GuardRuntimeState.SafeWrap, result.Decision);
+            Equal(GuardDecisionReason.GenuineLatchActive, result.Reason);
+            True(monitor.PersistentState.LatchedWeeklyResetAtUtc is not null);
+        }
+        finally
+        {
+            monitor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    private static void UserApplyPreservesLatchWithoutFreshEvidence()
+    {
+        var monitor = NewMonitor(new QueueSource(
+            AvailableWithWindows(95m, 25m),
+            AppServerUsageObservation.ErrorAt(
+                BaseTime.AddMinutes(1),
+                AppServerUsageError.ReadTimedOut)));
+        try
+        {
+            monitor.CheckNowAsync().GetAwaiter().GetResult();
+            monitor.CheckNowAsync().GetAwaiter().GetResult();
+            monitor.UpdateSettings(
+                monitor.Settings with
+                {
+                    SafeWrapThresholdPercent = 7m,
+                    CriticalBufferPercent = 5m
+                },
+                SettingsUpdateAuthority.UserApply);
+
+            Equal(GuardRuntimeState.SafeWrap, monitor.Current.Decision);
+            True(monitor.PersistentState.LatchedWeeklyResetAtUtc is not null);
+        }
+        finally
+        {
+            monitor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
     private static void AppServerCancellationCleansTransport()
     {
         var transport = new CancellableTransport();
@@ -2997,7 +3128,7 @@ internal static class ProductionTests
                     providerDiscovery: new ThrowingProviderDiscovery());
                 form.Size = form.MinimumSize;
                 form.PerformLayout();
-                Equal("Usage Guard v.0.003", form.Text);
+                Equal("Usage Guard v.0.004", form.Text);
                 Equal(new Size(560, 620), form.MinimumSize);
                 Equal(AutoScaleMode.Dpi, form.AutoScaleMode);
                 True(!string.IsNullOrWhiteSpace(form.AccessibleName));
@@ -3535,6 +3666,9 @@ internal static class ProductionTests
             StringComparison.Ordinal));
         True(UsageIntegrationInstructions.CodexAgreement.Contains(
             "Never begin a long or open-ended phase",
+            StringComparison.Ordinal));
+        True(UsageIntegrationInstructions.CodexAgreement.Contains(
+            "Thresholds, monitoring preferences, override state, and latch controls are user-owned",
             StringComparison.Ordinal));
     }
 

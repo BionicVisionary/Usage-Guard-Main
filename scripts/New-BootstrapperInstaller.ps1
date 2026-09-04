@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$PackageZip,
     [Parameter(Mandatory = $true)][string]$OutputPath,
-    [string]$Version = '0.003'
+    [string]$Version = '0.004'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,7 +20,7 @@ if ([IO.Path]::GetExtension($OutputPath) -cne '.exe' -or
     (Test-Path -LiteralPath $OutputPath)) {
     throw 'The installer output must be a new .exe file.'
 }
-if ($Version -cne '0.003') {
+if ($Version -cne '0.004') {
     throw 'Installer source and requested version do not match.'
 }
 

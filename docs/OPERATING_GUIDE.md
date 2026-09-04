@@ -86,6 +86,14 @@ checkpoints so SafeWrap cannot be crossed unnoticed during one open-ended phase.
 
 Thresholds must satisfy `0 <= critical <= SafeWrap <= Warning <= 100`. Invalid values are rejected. Corrupt, inaccessible, partial, or future-version settings/state load fail closed.
 
+Thresholds and override choices belong to the user. **Apply** saves the exact
+values shown in the app. If a prior SafeWrap latch belongs to the current quota
+window and a fresh trusted observation is now above the newly applied SafeWrap
+threshold, Apply retires that obsolete latch and immediately re-evaluates the
+status. Without fresh same-window evidence the latch remains fail-closed.
+Editing `settings.json` externally never clears a latch; agents must read and
+obey the app's settings rather than replacing them with preferred defaults.
+
 **Allow one-shot reset wake-up** permits an agent using the installed Codex
 skill to create or update one deduplicated same-task wake-up at the sanitized
 recommended time only after it completes its current checkpoint and becomes

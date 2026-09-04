@@ -23,6 +23,12 @@ public sealed record MonitorStateChangedEventArgs(
     SanitizedUsageState Current,
     bool IsMonitoring);
 
+public enum SettingsUpdateAuthority
+{
+    PreserveLatches,
+    UserApply
+}
+
 public sealed class UsageMonitor : IAsyncDisposable
 {
     private readonly IUsageObservationSource _source;
@@ -181,7 +187,9 @@ public sealed class UsageMonitor : IAsyncDisposable
         }
     }
 
-    public void UpdateSettings(GuardSettings settings)
+    public void UpdateSettings(
+        GuardSettings settings,
+        SettingsUpdateAuthority authority = SettingsUpdateAuthority.PreserveLatches)
     {
         ThrowIfDisposed();
         if (GuardSettingsValidator.Validate(settings) !=
@@ -195,6 +203,9 @@ public sealed class UsageMonitor : IAsyncDisposable
         lock (_sync)
         {
             var previous = _current;
+            var stateForEvaluation = authority == SettingsUpdateAuthority.UserApply
+                ? ReleaseObsoleteLatchesForUserApply(settings, _state, _current)
+                : _state;
             _settings = settings;
             var now = _clock.UtcNow;
             if (_current.Windows is { Count: 2 } windows &&
@@ -205,7 +216,7 @@ public sealed class UsageMonitor : IAsyncDisposable
                     item.Kind == AppServerQuotaWindowKind.Weekly);
                 var evaluation = ConfiguredGuardEvaluator.Evaluate(
                     settings,
-                    _state,
+                    stateForEvaluation,
                     new AppServerUsageObservation(
                         ObservationStatus.Available,
                         weekly.RemainingPercent,
@@ -226,9 +237,9 @@ public sealed class UsageMonitor : IAsyncDisposable
             {
                 _current = ConfiguredGuardEvaluator.FromStoredState(
                     settings,
-                    _state,
+                    stateForEvaluation,
                     now);
-                _state = _state with { Current = _current };
+                _state = stateForEvaluation with { Current = _current };
             }
 
             _storage.SaveState(_state);
@@ -240,6 +251,45 @@ public sealed class UsageMonitor : IAsyncDisposable
 
         WakeMonitor();
         StateChanged?.Invoke(this, changed);
+    }
+
+    private static GuardPersistentState ReleaseObsoleteLatchesForUserApply(
+        GuardSettings settings,
+        GuardPersistentState state,
+        SanitizedUsageState current)
+    {
+        if (current.Windows is not { Count: 2 } windows ||
+            current.Confidence != ObservationConfidence.High ||
+            current.Freshness != ObservationFreshness.ObservedNow ||
+            !current.IsSuccessfulLiveObservation)
+        {
+            return state;
+        }
+
+        var weekly = windows.Single(item =>
+            item.Kind == AppServerQuotaWindowKind.Weekly);
+        var fiveHour = windows.Single(item =>
+            item.Kind == AppServerQuotaWindowKind.FiveHour);
+        var releaseWeekly = state.LatchedWeeklyResetAtUtc is { } weeklyLatch &&
+            WeeklyWindowIdentity.IsSameWindow(weekly.ResetsAtUtc, weeklyLatch) &&
+            weekly.RemainingPercent > settings.SafeWrapThresholdPercent;
+        var releaseFiveHour = state.LatchedFiveHourResetAtUtc is { } fiveHourLatch &&
+            WeeklyWindowIdentity.IsSameWindow(fiveHour.ResetsAtUtc, fiveHourLatch) &&
+            fiveHour.RemainingPercent > settings.FiveHourSafeWrapThresholdPercent;
+
+        return state with
+        {
+            LatchedWeeklyResetAtUtc = releaseWeekly
+                ? null
+                : state.LatchedWeeklyResetAtUtc,
+            LatchCreatedAtUtc = releaseWeekly ? null : state.LatchCreatedAtUtc,
+            LatchedFiveHourResetAtUtc = releaseFiveHour
+                ? null
+                : state.LatchedFiveHourResetAtUtc,
+            FiveHourLatchCreatedAtUtc = releaseFiveHour
+                ? null
+                : state.FiveHourLatchCreatedAtUtc
+        };
     }
 
     public void MarkNotification(string key, DateTimeOffset shownAtUtc)

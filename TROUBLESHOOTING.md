@@ -433,3 +433,22 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   The thresholds were restored to 30/25/20 for both windows on 2026-09-04.
   Thresholds reduce risk but cannot predict phase cost, so fresh checkpoints
   remain necessary.
+
+## Apply saves thresholds but SafeWrap still shows an older latch
+
+- **Symptom/scope:** The settings file contains the user's new threshold, but
+  the status remains SafeWrap with `genuine_latch_active` for the same window.
+- **Confirmed cause:** Before the user-authority fix, all settings updates were
+  deliberately evaluated against the durable old latch, so lowering SafeWrap
+  looked like Apply had failed even though the file was saved.
+- **Avoid:** Replacing the user's settings with agent-selected defaults,
+  deleting state blindly, or treating an external file edit as user consent to
+  clear enforcement.
+- **Verified method:** Only the explicit in-app Apply/Restore Defaults path may
+  reconsider a latch. It clears a latch only when a fresh high-confidence live
+  observation identifies the same quota window and its remaining percentage is
+  above the applied SafeWrap threshold, then immediately re-evaluates. External
+  settings reloads and stale/Unknown observations preserve the latch.
+- **Limits:** Apply cannot safely clear a latch without fresh same-window
+  evidence. Agents must obey user-applied settings and may not alter settings,
+  override, or latch state without an explicit request for that exact change.

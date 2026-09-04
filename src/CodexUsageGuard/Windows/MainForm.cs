@@ -1449,7 +1449,9 @@ public sealed class MainForm : Form
                 {
                     _startup.SetEnabled(updated.StartAtSignIn);
                 }
-                _monitor.UpdateSettings(updated);
+                _monitor.UpdateSettings(
+                    updated,
+                    SettingsUpdateAuthority.UserApply);
                 Render(_monitor.Current);
                 Invalidate(invalidateChildren: true);
             }
@@ -1480,7 +1482,9 @@ public sealed class MainForm : Form
         {
             _startup.SetEnabled(false);
             _launchTogether.SetEnabled(false);
-            _monitor.UpdateSettings(restored);
+            _monitor.UpdateSettings(
+                restored,
+                SettingsUpdateAuthority.UserApply);
             LoadSettingsIntoControls();
             Render(_monitor.Current);
         }

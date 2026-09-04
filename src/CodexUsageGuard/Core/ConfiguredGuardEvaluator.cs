@@ -139,7 +139,9 @@ public static class ConfiguredGuardEvaluator
             {
                 State = GuardRuntimeState.SafeWrap,
                 Reason = GuardDecisionReason.GenuineLatchActive,
-                Source = GuardDecisionSource.GenuineLiveLatch,
+                Source = trustworthy
+                    ? GuardDecisionSource.LiveAppServer
+                    : GuardDecisionSource.GenuineLiveLatch,
                 StartNewPhaseAllowed = false,
                 FinishCurrentCheckpointOnly = true
             };

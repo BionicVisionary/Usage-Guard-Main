@@ -38,6 +38,12 @@ Treat command failure, malformed or contradictory output, `unknown`, or
 an older percentage. Never infer configured thresholds from this skill; the
 installed helper owns and validates them.
 
+Thresholds, monitoring preferences, override state, and latch controls are
+user-owned. Read and obey the configured decision, but do not edit the helper's
+settings/state files, restore defaults, change thresholds, toggle override, or
+clear/rearm a latch unless the user explicitly requests that exact change. The
+app's Apply action is authoritative; never substitute agent-preferred defaults.
+
 ## Optional reset wake-up
 
 The helper may include `resumeRecommendation`. Trust a scheduled time only when
