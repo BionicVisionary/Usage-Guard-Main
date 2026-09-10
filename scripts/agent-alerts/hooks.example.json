@@ -1,0 +1,17 @@
+{
+  "description": "Usage Guard local threshold alerts. Replace node with its verified absolute executable path, then review both hooks in /hooks.",
+  "hooks": {
+    "PreToolUse": [{ "hooks": [{
+      "type": "command",
+      "command": "node \"D:\\Codex\\Apps\\Usage Guard\\agent-alerts\\usage-guard-alert.mjs\"",
+      "timeout": 3,
+      "additionalContextLimit": 500
+    }] }],
+    "PostToolUse": [{ "hooks": [{
+      "type": "command",
+      "command": "node \"D:\\Codex\\Apps\\Usage Guard\\agent-alerts\\usage-guard-alert.mjs\"",
+      "timeout": 3,
+      "additionalContextLimit": 500
+    }] }]
+  }
+}

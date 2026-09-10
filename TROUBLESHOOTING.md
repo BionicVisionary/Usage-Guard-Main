@@ -1,11 +1,32 @@
 # Contributor troubleshooting knowledge
 
 This file records verified engineering routes for recurring Usage Guard
-problems. Investigate independently first, then consult the relevant entry.
+problems. For recurring symptoms, consult the relevant verified entry first.
 Update an existing entry when a safer or better verified method is found.
 Never record credentials, raw authentication data, account identifiers, raw
 provider payloads, chat content, or unnecessary personal information here.
 End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
+
+## Tray warnings do not reach a running Codex task (2026-09-11)
+
+- **Cause:** The 2026-09-05 agreement removed checkpoint checks without an
+  observed task-notification channel. Windows tray notifications do not inject
+  model context. The inspected Worknotic implementation turn exhausted usage;
+  it read the wrapper but had no recorded invocation during that turn.
+- **Fix prepared:** `scripts/agent-alerts/usage-guard-alert.mjs` reads the
+  existing monitored decision and emits short Codex PreToolUse/PostToolUse
+  context. Normal stays silent; Warning, SafeWrap and Critical escalate with
+  per-task deduplication. It performs no network/model calls or task starts.
+  Stale/invalid data produces an explicit fallback alert.
+- **Evidence:** Synthetic receiver tests cover configured thresholds, latches,
+  stale/invalid data and deduplication. The global agreement uses a cheap cached
+  checkpoint fallback until actual hook delivery is observed. Installation is
+  not evidence of runtime trust or delivery; see the receiver README.
+- **Avoid:** Cursor hook schemas, editing hook trust records, fake provider
+  percentages, starting idle tasks to deliver an alert, or automatic wake-ups.
+- **Limits:** Codex requires review/trust of non-managed hooks. Delivery is at
+  tool boundaries, not during a long command or tool-free reasoning. Preserve
+  checkpoint fallback until the current task records actual hook events.
 
 ## Approved secondary display is unavailable on a single-monitor host
 
