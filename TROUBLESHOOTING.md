@@ -19,14 +19,16 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   per-task deduplication. It performs no network/model calls or task starts.
   Stale/invalid data produces an explicit fallback alert.
 - **Evidence:** Synthetic receiver tests cover configured thresholds, latches,
-  stale/invalid data and deduplication. The global agreement uses a cheap cached
-  checkpoint fallback until actual hook delivery is observed. Installation is
-  not evidence of runtime trust or delivery; see the receiver README.
+  stale/invalid data and deduplication. A later real coordinator turn received
+  an automatic unavailable-monitor alert after user-reported hook trust.
+  Threshold delivery and wrapping remain user acceptance tests. The user's
+  revised agreement prohibits routine agent cache/live/receipt checks.
 - **Avoid:** Cursor hook schemas, editing hook trust records, fake provider
   percentages, starting idle tasks to deliver an alert, or automatic wake-ups.
 - **Limits:** Codex requires review/trust of non-managed hooks. Delivery is at
-  tool boundaries, not during a long command or tool-free reasoning. Preserve
-  checkpoint fallback until the current task records actual hook events.
+  tool boundaries, not during a long command or tool-free reasoning. Launch
+  `codex` from PowerShell first; `/hooks` belongs inside its interactive prompt.
+  See scripts/agent-alerts/VERIFICATION.md for the unresolved provenance result.
 
 ## Approved secondary display is unavailable on a single-monitor host
 

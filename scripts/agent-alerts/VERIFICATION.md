@@ -29,7 +29,33 @@ background mode. Settings remained byte-identical across that operation.
 The F executable was not modified or deleted. Start-at-sign-in preference was
 not enabled. A newly installed app binary was not required for this receiver.
 
-## Not yet verified
+## Later setup checkpoint — 2026-09-11
+
+The user reports trusting the hooks. This coordinator subsequently received a
+model-visible automatic alert: monitoring unavailable (invalid quota windows).
+This proves delivery of an unavailable-monitor alert in this task, not successful
+threshold delivery or agent wrapping across tasks. The one requested diagnostic
+returned safe_wrap / genuine_latch_active with executable_not_approved, empty
+windows and no successful live observation. No provenance bypass, threshold
+change or latch reset was performed. Further build/package work was deferred.
+
+The user now requests alert-only agent operation and will verify behavior.
+Global AGENTS.md removes routine live, cached and receipt checks; explicit user
+diagnostics and higher-priority delivered instructions remain exceptions.
+The setup README now distinguishes PowerShell's `codex` launch from `/hooks`
+inside the interactive Codex interface. The installed app's embedded setup text
+has not yet been rebuilt with these instructions.
+
+Installer inspection found artifacts/UsageGuard-Setup-0.003.exe and older
+installers, but no 0.004 setup executable in the repository artifacts or
+D:\Codex\Artifacts\UsageGuard. scripts/New-Package.ps1 defaults to 0.004 and
+already implements a self-contained Windows installer plus checksum. Next:
+update embedded Codex instructions and package integration for the separate
+receiver, build and test the current installer, verify fresh-machine install
+without copying user state, then hand off the exact installer and checksum.
+Do not present the old 0.003 installer as the current alert-enabled setup.
+
+## Earlier unverified state (superseded only by evidence above)
 
 Live trusted hook delivery and actual agent wrapping at a threshold have not
 been observed. The installed `--check` reports
