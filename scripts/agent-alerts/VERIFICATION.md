@@ -1,5 +1,19 @@
 # Local receiver verification — 2026-09-11
 
+## Deferred user-reported UI defect — v0.005
+
+After disabling the override, the user reported that clicking away from Usage
+Guard and returning to its window jumps the Codex tab from the upper status area
+to the bottom settings/Apply area, without scrolling. Two supplied screenshots
+show the before/after positions. Cause and reproduction have not been verified;
+focus restoration bringing a lower control into view is only a hypothesis.
+Next repair acceptance: retain the user's scroll position across window
+deactivation/reactivation, while preserving deliberate keyboard navigation and
+scrolling. Reproduce through isolated QA; do not steal host focus or disrupt
+typing. The user asked to fix this later, not to schedule an automatic task.
+The screenshot shows configured gating active and Critical SafeWrap; no new
+implementation or diagnostic phase was begun for this report.
+
 ## v0.005 repair and package checkpoint
 
 - Root cause: the installed official Codex CLI updated from the reviewed
