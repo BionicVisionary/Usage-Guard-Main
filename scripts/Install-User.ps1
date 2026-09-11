@@ -110,6 +110,17 @@ function Assert-OwnedInstallDirectory {
         throw 'Refusing to replace a non-empty destination whose ownership record does not match it.'
     }
     foreach ($Entry in $Entries) {
+        if ($Entry.Name -eq 'agent-alerts' -and $Entry.PSIsContainer -and
+            ($Entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -eq 0) {
+            foreach ($AlertEntry in @(Get-ChildItem -LiteralPath $Entry.FullName -Force)) {
+                if ($AlertEntry.PSIsContainer -or
+                    ($AlertEntry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
+                    $AlertEntry.Name -notin @('usage-guard-alert.mjs', 'README.md', 'Install-CodexAlerts.ps1')) {
+                    throw 'Refusing to replace an alert directory containing unowned files.'
+                }
+            }
+            continue
+        }
         if ($Entry.PSIsContainer -or
             ($Entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
             $Entry.Name -notin $AllowedAppFiles) {
@@ -187,6 +198,10 @@ if ($InstallCodexIntegration) {
     New-Item -ItemType Directory -Path $SkillsParent -Force | Out-Null
 }
 
+$TargetMovedToBackup = $false
+$TargetPromoted = $false
+$SkillMovedToBackup = $false
+$SkillPromoted = $false
 try {
     New-Item -ItemType Directory -Path $TargetStage | Out-Null
     foreach ($File in $AppFiles) {
@@ -195,6 +210,25 @@ try {
         $StageHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $TargetStage $File.Name)).Hash
         if ($SourceHash -ne $StageHash) {
             throw "Staged application hash mismatch: $($File.Name)"
+        }
+    }
+    $AlertSource = Join-Path $SourceDirectory 'agent-alerts'
+    if (Test-Path -LiteralPath $AlertSource -PathType Container) {
+        if ((Get-Item -LiteralPath $AlertSource).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw 'Refusing a redirected alert source.'
+        }
+        $AlertStage = Join-Path $TargetStage 'agent-alerts'
+        New-Item -ItemType Directory -Path $AlertStage | Out-Null
+        foreach ($AlertName in @('usage-guard-alert.mjs', 'README.md', 'Install-CodexAlerts.ps1')) {
+            $AlertFile = Get-Item -LiteralPath (Join-Path $AlertSource $AlertName)
+            if ($AlertFile.PSIsContainer -or ($AlertFile.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+                throw 'Refusing an invalid alert source file.'
+            }
+            Copy-Item -LiteralPath $AlertFile.FullName -Destination $AlertStage
+            if ((Get-FileHash -LiteralPath $AlertFile.FullName).Hash -ne
+                (Get-FileHash -LiteralPath (Join-Path $AlertStage $AlertName)).Hash) {
+                throw 'Staged alert hash mismatch.'
+            }
         }
     }
 
@@ -207,8 +241,10 @@ try {
 
     if ($TargetHadExisting) {
         Move-Item -LiteralPath $InstallDirectory -Destination $TargetBackup
+        $TargetMovedToBackup = $true
     }
     Move-Item -LiteralPath $TargetStage -Destination $InstallDirectory
+    $TargetPromoted = $true
     if ($LegacyHadExisting) {
         Move-Item -LiteralPath $LegacyInstallDirectory -Destination $LegacyBackup
     }
@@ -216,8 +252,10 @@ try {
     if ($InstallCodexIntegration) {
         if ($SkillHadExisting) {
             Move-Item -LiteralPath $SkillInstallDirectory -Destination $SkillBackup
+            $SkillMovedToBackup = $true
         }
         Move-Item -LiteralPath $SkillStage -Destination $SkillInstallDirectory
+        $SkillPromoted = $true
     }
 
     if ($LocatorHadExisting) {
@@ -265,20 +303,20 @@ catch {
     if (Test-Path -LiteralPath $SkillStage) {
         Remove-Item -LiteralPath $SkillStage -Recurse -Force
     }
-    if (Test-Path -LiteralPath $InstallDirectory) {
+    if ($TargetPromoted -and (Test-Path -LiteralPath $InstallDirectory)) {
         Remove-Item -LiteralPath $InstallDirectory -Recurse -Force
     }
-    if ($TargetHadExisting -and (Test-Path -LiteralPath $TargetBackup)) {
+    if ($TargetMovedToBackup -and (Test-Path -LiteralPath $TargetBackup)) {
         Move-Item -LiteralPath $TargetBackup -Destination $InstallDirectory
     }
     if ($LegacyHadExisting -and (Test-Path -LiteralPath $LegacyBackup)) {
         Move-Item -LiteralPath $LegacyBackup -Destination $LegacyInstallDirectory
     }
     if ($InstallCodexIntegration) {
-        if (Test-Path -LiteralPath $SkillInstallDirectory) {
+        if ($SkillPromoted -and (Test-Path -LiteralPath $SkillInstallDirectory)) {
             Remove-Item -LiteralPath $SkillInstallDirectory -Recurse -Force
         }
-        if ($SkillHadExisting -and (Test-Path -LiteralPath $SkillBackup)) {
+        if ($SkillMovedToBackup -and (Test-Path -LiteralPath $SkillBackup)) {
             Move-Item -LiteralPath $SkillBackup -Destination $SkillInstallDirectory
         }
     }

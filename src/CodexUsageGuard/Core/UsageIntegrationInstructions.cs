@@ -4,7 +4,7 @@ public static class UsageIntegrationInstructions
 {
     public const string Overview =
         "Usage Guard monitors and displays supported usage limits without any AI instruction file. " +
-        "Provider instructions are needed only when you want an AI coding task to consult the configured decision at safe phase boundaries. " +
+        "Provider integrations deliver usage decisions to coding tasks. Codex can receive local tool-boundary alerts without routine agent quota checks. " +
         "That behavior is advisory: it finishes the current coherent checkpoint and starts no new phase; it never instantly stops, interrupts, or kills a task. " +
         "All thresholds, state, skills, and instruction-file changes are local to this Windows user and machine; they do not change the AI account's rules on another computer. " +
         "Each AI needs its own supported instruction and usage-source integration. Claude plan usage is shared across Chat and Code, but only Claude Code has a supported local phase-boundary integration.";
@@ -12,17 +12,20 @@ public static class UsageIntegrationInstructions
     public const string CodexSetup =
         "Recommended: press Configure Codex. Usage Guard installs or verifies its embedded Codex skill and appends only its delimited agreement to your user-wide AGENTS.md, preserving all existing instructions and creating a dated backup. " +
         "Codex loads these instructions when a task starts, so open a new task afterward; existing tasks do not gain them retroactively. " +
-        "If automatic setup is blocked, use the troubleshooting instructions below. The documented /init command can create a project AGENTS.md scaffold.";
+        "Next, install the alert hooks: open PowerShell and run & '<your Usage Guard install folder>\\agent-alerts\\Install-CodexAlerts.ps1'. Replace the placeholder with your chosen folder; Node.js is required. The script preserves unrelated hooks and does not approve trust. " +
+        "Then type codex in PowerShell. Wait for the interactive Codex prompt and enter /hooks INSIDE Codex, not at the PowerShell PS prompt. Review and trust only Usage Guard's PreToolUse and PostToolUse entries, checking the Node and receiver paths. Do not Trust all unrelated hooks. Keep Usage Guard monitoring enabled. " +
+        "Agents rely on delivered alerts, not routine live or cached checks. A tray alert is not proof of task delivery. Verify a naturally reached threshold in a real task; no percentage reserves quota. " +
+        "If live readings report executable_not_approved after a Codex update, use a reviewed Usage Guard update supporting that official CLI version. Hook trust does not approve a changed Codex executable. Never disable identity verification or copy credentials, state or trust records from another computer.";
 
     public const string CodexAgreement =
         "<!-- BEGIN CODEX USAGE GUARD WORKING AGREEMENT -->\r\n" +
-        "## Usage Guard normal enforcement\r\n\r\n" +
-        "- Before substantive multi-phase work, each new material phase, or additional delegation, consult the installed `codex-usage-guard` skill and obey its configured decision.\r\n" +
+        "## Usage Guard alert-driven operation\r\n\r\n" +
+        "- Rely on delivered Usage Guard PreToolUse/PostToolUse alerts. Do not run routine live, cached or receipt checks at startup, resume, phase boundaries or checkpoints. Diagnostics require an explicit user request or a higher-priority delivered instruction.\r\n" +
         "- Thresholds, monitoring preferences, override state, and latch controls are user-owned. Agents read and obey the configured decision but must not edit settings/state, restore defaults, change thresholds, toggle override, or clear/rearm a latch unless the user explicitly requests that exact change. Values saved through the app's Apply action are authoritative.\r\n" +
-        "- Normal permits a bounded new phase. Warning permits only a short recoverable checkpoint followed by another check. SafeWrap or Unknown permits only finishing the already-active coherent checkpoint, safe cleanup, and a truthful handoff; start no new phase.\r\n" +
-        "- Every result is a point-in-time phase-admission decision, not continuous monitoring or proof that an open-ended phase will fit. Split Sandbox/VM work, deep QA, builds, releases, research, and other high or uncertain usage work into short recoverable checkpoints and recheck at each checkpoint. Never begin a long or open-ended phase when usage could cross SafeWrap before the next check.\r\n" +
+        "- Normal permits bounded work. Warning means short recoverable checkpoints and early handoff preparation. SafeWrap or Unknown permits only finishing the active coherent checkpoint, cleanup and a truthful handoff; start no new phase. Missing alerts do not prove healthy usage.\r\n" +
+        "- Tool-boundary delivery cannot interrupt long commands or tool-free reasoning. Keep work recoverable; do not add agent polling. Preserve necessary self-review.\r\n" +
         "- Critical SafeWrap is urgent but remains checkpoint-safe. Never interrupt in-flight commands, discard coherent work, cancel tasks, or claim a hard global stop.\r\n" +
-        "- If Usage Guard returns a fresh, genuine reset recommendation and the local one-shot wake-up setting is enabled, an agent may schedule or update one deduplicated same-task wake-up only after the checkpoint and cleanup are complete. It must delete itself when it fires and recheck Usage Guard before resuming; time alone never permits work and short-interval polling is forbidden.\r\n" +
+        "- Do not create reset wake-ups or scheduled continuations without an explicit user request. A saved opt-in or unfinished goal is not authorization.\r\n" +
         "- Never consume a usage-reset credit automatically.\r\n" +
         "<!-- END CODEX USAGE GUARD WORKING AGREEMENT -->";
 

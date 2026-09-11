@@ -248,6 +248,12 @@ try {
         throw 'The isolated user-scoped install did not verify.'
     }
     $InstallVerified = $true
+    foreach ($AlertFile in @('usage-guard-alert.mjs', 'Install-CodexAlerts.ps1', 'README.md')) {
+        if ((Get-FileHash -LiteralPath (Join-Path $AppSource "agent-alerts\$AlertFile")).Hash -ne
+            (Get-FileHash -LiteralPath (Join-Path $InstalledDirectory "agent-alerts\$AlertFile")).Hash) {
+            throw 'The installed alert integration did not match its source.'
+        }
+    }
 
     $CurrentStep = 'popup_launch'
     $env:USAGE_GUARD_SANDBOX_QA_SESSION = '1'

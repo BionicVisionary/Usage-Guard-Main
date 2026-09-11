@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$PackageVersion = '0.004'
+    [string]$PackageVersion = '0.005'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -54,6 +54,10 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $Stage 'skill\scripts') -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $Stage 'docs') -Force | Out-Null
     Copy-Item -LiteralPath $PublishedExecutable -Destination (Join-Path $Stage 'app')
+    New-Item -ItemType Directory -Path (Join-Path $Stage 'app\agent-alerts') | Out-Null
+    foreach ($AlertFile in @('usage-guard-alert.mjs', 'Install-CodexAlerts.ps1', 'README.md')) {
+        Copy-Item -LiteralPath (Join-Path $RepositoryRoot "scripts\agent-alerts\$AlertFile") -Destination (Join-Path $Stage 'app\agent-alerts')
+    }
 
     Copy-Item -LiteralPath (Join-Path $RepositoryRoot '.agents\skills\codex-usage-guard\SKILL.md') -Destination (Join-Path $Stage 'skill')
     Copy-Item -LiteralPath (Join-Path $RepositoryRoot '.agents\skills\codex-usage-guard\scripts\check_usage.ps1') -Destination (Join-Path $Stage 'skill\scripts')

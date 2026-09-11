@@ -102,3 +102,14 @@
 
 Development was verified on `codex/multi-provider-installer-update-ui` before
 the user's explicit approval to merge and publish the source to `main`.
+# 0.005 — reviewed Codex update and alert setup
+
+- Restore live reading for the independently verified official Codex CLI 0.154.0;
+  keep exact executable SHA-256 validation and fail closed on other binaries.
+- Include the local alert receiver and conflict-preserving setup script in the
+  installer. Explain PowerShell versus the interactive Codex `/hooks` command.
+- Use alert-driven Codex instructions without routine agent quota checks.
+- Preserve owned alert files during package upgrades and prevent rollback from
+  deleting an existing app/skill when staging fails before promotion.
+- Installation and live reading verified on the current host; broader storage
+  tests and isolated Sandbox QA have unresolved failures. See receiver verification.

@@ -8,6 +8,32 @@ import { assess, deliver, readObservation } from '../scripts/agent-alerts/usage-
 
 const now = Date.parse('2026-09-11T01:00:00Z');
 const root = fs.mkdtempSync('D:/Codex/Artifacts/UsageGuard/agent-alert-tests-');
+test('hook installer preserves unrelated hooks, is idempotent and refuses conflicts', () => {
+  const config = path.join(root, 'install-config');
+  fs.mkdirSync(config);
+  const hooksFile = path.join(config, 'hooks.json');
+  const unrelated = { hooks: [{ type: 'command', command: 'echo unrelated' }] };
+  fs.writeFileSync(hooksFile, JSON.stringify({ description: 'keep me', hooks: { Stop: [unrelated] } }));
+  const installer = fileURLToPath(new URL('../scripts/agent-alerts/Install-CodexAlerts.ps1', import.meta.url));
+  const run = () => spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+    '-File', installer, '-NodePath', process.execPath, '-CodexConfigDirectory', config], { encoding: 'utf8', timeout: 30000 });
+  let result = run();
+  assert.equal(result.status, 0, result.stderr);
+  let installed = JSON.parse(fs.readFileSync(hooksFile, 'utf8').replace(/^\uFEFF/, ''));
+  assert.equal(installed.description, 'keep me');
+  assert.deepEqual(installed.hooks.Stop, [unrelated]);
+  assert.equal(installed.hooks.PreToolUse.length, 1);
+  assert.equal(installed.hooks.PostToolUse.length, 1);
+  assert.equal(installed.hooks.PreToolUse[0].hooks[0].timeout, 3);
+  const before = fs.readFileSync(hooksFile);
+  result = run(); assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(fs.readFileSync(hooksFile), before);
+  installed.hooks.PreToolUse[0].hooks[0].command = 'different usage-guard-alert.mjs';
+  fs.writeFileSync(hooksFile, JSON.stringify(installed));
+  const conflicting = fs.readFileSync(hooksFile);
+  result = run(); assert.notEqual(result.status, 0);
+  assert.deepEqual(fs.readFileSync(hooksFile), conflicting);
+});
 const settings = { schemaVersion: 1, warningThresholdPercent: 15, safeWrapThresholdPercent: 10,
   criticalBufferPercent: 5, fiveHourWarningThresholdPercent: 30, fiveHourSafeWrapThresholdPercent: 25,
   fiveHourCriticalBufferPercent: 20, pollingIntervalSeconds: 30, unrestrictedDevelopmentOverride: false };

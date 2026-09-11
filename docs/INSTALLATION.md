@@ -1,18 +1,46 @@
 # User-scoped installation
 
+## v0.005: Codex alerts on another computer
+
+Install `UsageGuard-Setup-0.005.exe` after comparing its companion SHA-256.
+Choose a user-writable folder (on this user's machine, D:\Codex\Apps\Usage Guard).
+The app is self-contained; the optional alert receiver separately requires Node.js.
+No credentials, saved quotas, settings, overrides, latches or hook trust records
+are distributed. Sign in through Codex itself on the destination computer.
+
+Live reading in this release supports the official Windows x64 Codex CLI 0.154.0
+at `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`. Its approved SHA-256 is
+`be96b992178b1e467c225800da0d65f2c86d5eba1ef0b14632f65db381cbdfde`, verified against
+OpenAI's release digest and a valid OpenAI signature. Different builds remain
+unapproved; do not replace the hash with an arbitrary local value.
+
+1. In Usage Guard, choose Configure Codex to install its diagnostic skill and
+   alert-driven agreement. Existing conflicting instructions are preserved.
+2. Run the installed `agent-alerts\Install-CodexAlerts.ps1` from PowerShell.
+   Supply `-NodePath` if Node is not automatically found. See its adjacent README.
+3. Type `codex` in PowerShell; **then** enter `/hooks` inside Codex, not at `PS>`.
+   Review and trust just Usage Guard's PreToolUse/PostToolUse handlers.
+4. Keep monitoring enabled. Agents rely on delivered alerts, with no routine
+   live, cached or receipt checks. The user verifies naturally reached thresholds.
+
+Hook trust enables delivery; it cannot fix `executable_not_approved`. That error
+requires a reviewed helper update for the changed official Codex executable.
+The installer is unsigned. A successful local test is not proof of operation
+on every other computer or of end-to-end threshold wrapping.
+
 ## Shareable package
 
 The Release package is a self-contained Windows x64 ZIP plus an unsigned,
-console-free `UsageGuard-Setup-0.003.exe` bootstrapper compiled with the built-in
+console-free `UsageGuard-Setup-0.005.exe` bootstrapper compiled with the built-in
 Windows .NET Framework toolchain. The recipient does not
 need a separate .NET runtime or administrator rights. Run the setup executable,
 or extract the ZIP and run `Install.cmd`. Use
 `Install-With-Codex-Integration.cmd` only to add the optional Codex skill during
 installation; Codex and Claude can also be configured later from the popup.
-Because 0.003 is not code-signed, recipients should expect an unknown-publisher
+Because 0.005 is not code-signed, recipients should expect an unknown-publisher
 warning and compare the SHA-256 published with the release.
-Distribute `UsageGuard-Setup-0.003.exe` together with
-`UsageGuard-Setup-0.003.exe.sha256`; future in-window updates require both exact
+Distribute `UsageGuard-Setup-0.005.exe` together with
+`UsageGuard-Setup-0.005.exe.sha256`; future in-window updates require both exact
 assets on a non-draft immutable GitHub Release. Usage Guard also requires the
 public GitHub API's SHA-256 digest for both assets, verifies the checksum file
 against its digest, and verifies the installer against both that checksum and
@@ -53,7 +81,7 @@ profile, so another computer sharing the same AI account keeps its own rules.
 
 - Windows 10/11 x64. The shareable package is self-contained; repository builds
   require the .NET 8 SDK/Desktop tooling.
-- Official user-scoped Codex CLI `0.149.1` at `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe` with the pinned SHA-256 recorded in the README.
+- Official user-scoped Codex CLI `0.154.0` at `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe` with the pinned SHA-256 recorded in the README.
 - No administrator rights or UAC.
 - Claude live windows require the separately installed official Claude Code CLI
   started with Usage Guard's isolated `--settings` file, plus a real response

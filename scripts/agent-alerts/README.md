@@ -22,6 +22,19 @@ The helper's two-minute freshness ceiling is enforced from its timestamp.
 
 ## Install and trust
 
+In v0.005 the installer includes this folder. Open PowerShell and run:
+
+```powershell
+& 'D:\Codex\Apps\Usage Guard\agent-alerts\Install-CodexAlerts.ps1'
+```
+
+Replace the example folder with your chosen install folder. The script finds
+Node on PATH or in Codex's dependency runtime; otherwise install Node.js and pass
+`-NodePath 'C:\Program Files\nodejs\node.exe'`. It preserves unrelated hooks,
+backs up changed hooks.json and never changes trust records. Re-running an
+identical setup is a no-op. Conflicting existing Usage Guard entries require
+review rather than silent replacement. Then follow steps 3–5 below.
+
 1. Copy `usage-guard-alert.mjs` to `D:\Codex\Apps\Usage Guard\agent-alerts`.
    Keep it separate from source branches so a checkout cannot change it.
 2. Add command handlers for `PreToolUse` and `PostToolUse` in the user
@@ -42,8 +55,11 @@ The helper's two-minute freshness ceiling is enforced from its timestamp.
    actually wraps. Do not change thresholds or fabricate quota data for testing.
 
 On another computer, install the helper and Node, then configure these absolute
-paths for that computer. The existing app installer does not establish that this
-separate receiver is installed or trusted. Never copy credentials, quota state,
+paths for that computer. Installing the receiver does not establish hook trust.
+The v0.005 live reader requires the official Windows x64 Codex CLI 0.154.0 at
+`%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`. Other versions fail closed;
+use a reviewed helper update, never replace its expected hash with an unverified
+value. Sign in using Codex itself. Never copy credentials, quota state,
 latches, or hook trust records from the first computer.
 
 Official contract: https://learn.chatgpt.com/docs/hooks

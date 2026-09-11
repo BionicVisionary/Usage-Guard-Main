@@ -277,6 +277,14 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
 
 ## Installed helper or CLI provenance cannot be resolved
 
+- **2026-09-11 verified update:** Codex 0.154.0 replaced the pinned 0.149.1.
+  Authenticode was Valid for OpenAI OpCo, LLC and its local SHA-256 exactly
+  matched the official openai/codex rust-v0.154.0 Windows x64 release asset.
+  Updating the reviewed pin restored available/high-confidence live readings
+  in the built and installed v0.005 helper. Hook trust only enabled delivery;
+  it did not change the executable approval. Never auto-approve a local hash.
+  Later Codex updates still require independent provenance review.
+
 - **Symptom/scope:** The wrapper reports unavailable/provenance mismatch even
   though a similarly named executable exists.
 - **Confirmed cause:** Package aliases, inaccessible WindowsApps binaries,

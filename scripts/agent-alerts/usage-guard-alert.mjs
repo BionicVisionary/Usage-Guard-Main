@@ -51,7 +51,7 @@ export function assess(settings, state, now = Date.now()) {
     return `${kind === 'five_hour' ? '5-hour' : 'weekly'} ${w.remainingPercent}% remaining; configured Warning/SafeWrap/Critical ${limits[kind].join('/')}%`;
   }).join('. ');
   const action = level === 'warning'
-    ? 'Warning: use short recoverable checkpoints, avoid a large new phase, and prepare a concise handoff. Follow verified hook alerts; until delivery is verified, keep the cached checkpoint fallback. Do not poll live quotas.'
+    ? 'Warning: use short recoverable checkpoints, avoid a large new phase, and prepare a concise handoff. Rely on delivered alerts; do not run routine live, cached or receipt checks.'
     : `${critical ? 'Critical SafeWrap: urgently' : 'SafeWrap:'} finish only the current coherent checkpoint, save the handoff, do necessary cleanup and become idle. Start no new phase or delegation. Do not interrupt commands, kill tasks, change settings, or schedule a wake-up.`;
   return { level, signature: JSON.stringify(limits), message: `Usage Guard — ${action} ${summary}. Observed ${new Date(c.observedAtUtc).toISOString()}.` };
 }
@@ -91,7 +91,7 @@ export function deliver(event, observation, ledgerDir, now = Date.now()) {
   try { fd = fs.openSync(lock, 'wx'); } catch (e) {
     if (e.code === 'EEXIST' && now - fs.lstatSync(lock).mtimeMs < 10000) return {};
     if (e.code === 'EEXIST') return { hookSpecificOutput: { hookEventName: event.hook_event_name,
-      additionalContext: 'Usage Guard alert receiver is busy or its lock is stale. At the next safe checkpoint use the cached fallback if no threshold alert arrives; do not assume protection is active.' } };
+      additionalContext: 'Usage Guard alert receiver is busy or its lock is stale. Report this at the next safe checkpoint; do not assume protection is active or start routine polling.' } };
     throw e;
   }
   try {
@@ -119,7 +119,9 @@ export function deliver(event, observation, ledgerDir, now = Date.now()) {
 export async function main(args = process.argv.slice(2)) {
   const guardDir = path.join(process.env.LOCALAPPDATA ?? '', 'OpenAI', 'CodexUsageGuard');
   // Small durable receipts belong on D, never in project source or user profiles.
-  const ledgerDir = 'D:\\Codex\\State\\UsageGuard\\agent-alerts';
+  const ledgerDir = fs.existsSync('D:\\Codex')
+    ? 'D:\\Codex\\State\\UsageGuard\\agent-alerts'
+    : path.join(guardDir, 'agent-alerts'); // Small application state on other PCs.
   const observation = readObservation(guardDir);
   if (args.length === 1 && args[0] === '--check') {
     let delivery = 'unverified_use_checkpoint_fallback';
@@ -154,5 +156,5 @@ export async function main(args = process.argv.slice(2)) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main().catch(() => { process.stderr.write('Usage Guard alert receiver failed; use the cached checkpoint fallback.\n'); process.exitCode = 1; });
+  main().catch(() => { process.stderr.write('Usage Guard alert receiver failed; report the failure without routine polling.\n'); process.exitCode = 1; });
 }

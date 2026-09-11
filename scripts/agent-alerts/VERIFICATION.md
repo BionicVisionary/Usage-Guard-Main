@@ -1,5 +1,50 @@
 # Local receiver verification — 2026-09-11
 
+## v0.005 repair and package checkpoint
+
+- Root cause: the installed official Codex CLI updated from the reviewed
+  0.149.1 to 0.154.0. Its SHA-256 is
+  be96b992178b1e467c225800da0d65f2c86d5eba1ef0b14632f65db381cbdfde.
+  The hash exactly matches the openai/codex rust-v0.154.0 Windows x64 executable
+  release asset digest; Authenticode reported Valid, signer OpenAI OpCo, LLC.
+  Updated only the reviewed version/hash, retaining fail-closed identity checks.
+- Release build: zero warnings/errors. Fifteen Node receiver/setup tests passed;
+  PowerShell parsing and git diff whitespace checks passed. Hook setup tests
+  cover unrelated configuration preservation, idempotence and conflict refusal.
+- Host full C# tests did NOT pass: nine storage tests reported unauthorized
+  operations. No storage security checks were weakened to make them pass.
+- Locked-down Sandbox run sandbox-evidence-20260911-044531-cd4be93f failed at
+  synthetic_tests (reported name: suffix percentage is normalized). Guest
+  installation, rollback and UI proof were NOT reached. The host launcher was
+  configured for the validated secondary DEL4015 display, no input injection.
+- Built artifacts/UsageGuard-Setup-0.005.exe and companion .sha256, unsigned.
+  Installer SHA-256: 5ec5a93b5ca90955f7f596b606c3bf28abec1419fae5a0fa52f661509868d5d0.
+  ZIP SHA-256: 6192d1b9ae933a6c9161a5b29f7ad135c9a4c53aa877ba15cc874caf562446b7.
+  Includes self-contained app, receiver, setup script and instructions, no user
+  credentials, quota state or hook trust records. Extracted payload app matched
+  its manifest. The GUI bootstrapper itself was not interactively verified.
+- Installed that exact package through its user installer into
+  D:\Codex\Apps\Usage Guard; app SHA-256
+  5419bd80dd0f199a817b3695d34c3be569ea3955634200226027a29dafe20d4c.
+  Settings hash remained identical. The helper was restarted with --background.
+  Retained prior app at D:\Codex\Apps\Usage Guard.backup-2026-09-11-v0.004-to-v0.005
+  and the dated installed-skill backup. Global AGENTS.md and hook definitions
+  were not overwritten. The new bundled skill follows alert-only operation.
+- Installed --app-server-usage returned available/high/observed_now, error null,
+  five_hour 46%, weekly 2%, at 2026-09-11T04:47:10Z. This is a genuine read,
+  not a guarantee of current percentages or successful threshold wrapping.
+- User explicitly authorized repair/package override and subsequently enabled
+  it in the helper. Override/settings remain user-owned; no reset credit or
+  wake-up was used. Leave live threshold/agent wrapping acceptance to the user.
+
+Remaining verification: investigate the host storage-test permissions and the
+isolated synthetic-test failure, then finish clean-machine GUI install, rollback
+and rendered instruction checks. Existing installer is built and its install
+script worked on this host, but it is not a fully QA-approved public release.
+No GitHub release was published. On another PC use the reviewed CLI version,
+install Node for alerts, run the installed Install-CodexAlerts.ps1 and review
+only its two hooks inside the interactive Codex /hooks interface.
+
 ## Observed
 
 - 14 synthetic Node tests passed, including actual cached-check subprocess JSON.

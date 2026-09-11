@@ -69,6 +69,10 @@ try {
         -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
         -p:DebugType=None -o $AppStage
     if ($LASTEXITCODE -ne 0) { throw 'The Sandbox application publish failed.' }
+    New-Item -ItemType Directory -Path (Join-Path $AppStage 'agent-alerts') | Out-Null
+    foreach ($AlertFile in @('usage-guard-alert.mjs', 'Install-CodexAlerts.ps1', 'README.md')) {
+        Copy-Item -LiteralPath (Join-Path $RepositoryRoot "scripts\agent-alerts\$AlertFile") -Destination (Join-Path $AppStage 'agent-alerts')
+    }
     & dotnet publish (Join-Path $RepositoryRoot 'tests\CodexUsageGuard.Tests\CodexUsageGuard.Tests.csproj') `
         -c Release -r win-x64 --self-contained true `
         -p:DebugType=None -o $TestStage
