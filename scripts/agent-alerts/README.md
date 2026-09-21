@@ -1,7 +1,7 @@
 # Codex threshold alert receiver
 
 This dependency-free Node receiver connects Usage Guard's existing monitored
-decision to Codex's supported `PreToolUse` and `PostToolUse` hook context.
+decision to Codex's supported `UserPromptSubmit`, `PreToolUse` and `PostToolUse` hook context.
 It is a separately installed integration: no app binary or verified bundled
 skill needs replacing. Only same-user local settings and sanitized state are
 read. It never contacts a provider, starts an AI turn, blocks a tool, interrupts
@@ -13,7 +13,13 @@ SafeWrap makes the same action urgent. Both configured windows are checked;
 the helper's decision governs admission, and a critical threshold can escalate
 an existing SafeWrap latch. All thresholds come from user settings.
 
-Normal is silent. Alerts are deduplicated per session/turn/level/settings and
+Each submitted user message receives the current decision before tools or
+reasoning, including explicit recovery for Normal, Warning or user override.
+It supersedes only previous Usage Guard quota notices, not other instructions
+or permissions. It does not infer a reset. This stateless prompt path does not
+depend on receipts or locks and stores no prompts. It cannot wake an idle task.
+Unchanged Normal/override is quiet at tool boundaries. Other alerts are
+deduplicated per session/turn/level/settings and
 escalate at the next hook boundary. SafeWrap reminders are at most once a minute
 per active turn. Small receipts under `D:\Codex\State\UsageGuard\agent-alerts`
 contain no prompts or tool arguments. Inactive tasks are never woken.
@@ -37,16 +43,17 @@ review rather than silent replacement. Then follow steps 3–5 below.
 
 1. Copy `usage-guard-alert.mjs` to `D:\Codex\Apps\Usage Guard\agent-alerts`.
    Keep it separate from source branches so a checkout cannot change it.
-2. Add command handlers for `PreToolUse` and `PostToolUse` in the user
+2. Add command handlers for `UserPromptSubmit`, `PreToolUse` and `PostToolUse` in the user
    `~/.codex/hooks.json`, preserving unrelated hooks. Use an absolute available
    Node executable and quoted script path, no matcher, timeout 3 seconds and
    additionalContextLimit 500.
 3. Open PowerShell or a terminal and enter `codex`. Wait for the interactive
    Codex prompt. Enter `/hooks` **inside Codex**, not at the PowerShell `PS ...>`
    prompt. PowerShell reports CommandNotFound if `/hooks` is entered there.
-4. In Hooks, review the PreToolUse and PostToolUse entries individually. Confirm
+4. In Hooks, review the UserPromptSubmit, PreToolUse and PostToolUse entries individually. Confirm
    each invokes your installed Node executable and `usage-guard-alert.mjs` path,
-   then trust those two entries. Do not use Trust all for unrelated hooks, mark
+   then trust those three entries. Existing installations must review the new
+   UserPromptSubmit entry too. Do not use Trust all for unrelated hooks, mark
    them managed, bypass trust, or edit trust records. Changed definitions require
    another review. Exit the terminal Codex interface when finished.
 5. Keep Usage Guard monitoring enabled. Use an ordinary task and observe its
@@ -79,10 +86,20 @@ The manual check does not create a hook receipt.
 
 ## Limits and rollback
 
-Delivery happens at tool boundaries, subject to the user's monitoring interval
+Delivery happens at user-message submission and tool boundaries, subject to the user's monitoring interval
 and runtime hook behavior. It cannot notify during tool-free reasoning, stop a
 long command, or guarantee wrapping finishes before exhaustion. Keep work
 recoverable; no percentage threshold reserves tokens.
+
+If a task still obeys an old SafeWrap after recovery, verify the new
+UserPromptSubmit entry is reviewed and available in that Codex runtime, then
+submit a message in the same task. Merely installing a hook or seeing a Normal
+tray state is not proof that recovery reached it. Never edit trust records or
+bypass review. Synthetic tests prove receiver behavior, not desktop delivery.
+If an already-loaded desktop task still receives no notice after review,
+checkpoint active work and restart Codex normally before retesting the same
+task. A cold reload is a diagnostic step, not a guarantee. Do not run a second
+writer against that task or kill the app to force a reload.
 
 To disable deliberately, remove only these handlers from hooks.json. This stops
 automatic delivery; do not silently replace it with agent polling.

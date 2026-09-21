@@ -6,7 +6,7 @@ description: Follow delivered Usage Guard alerts; diagnose only when explicitly 
 # Usage Guard: alert-driven Codex integration
 
 Usage Guard owns monitoring and user-configured thresholds. Trusted local
-PreToolUse/PostToolUse hooks deliver alerts without provider calls or AI turns.
+UserPromptSubmit/PreToolUse/PostToolUse hooks deliver decisions without provider calls or AI turns.
 Do not run this skill's scripts or cached/receipt checks routinely at startup,
 resume, checkpoints or phase/delegation boundaries. Follow the user's global
 AGENTS.md. Missing alerts do not prove healthy usage.
@@ -17,8 +17,13 @@ AGENTS.md. Missing alerts do not prove healthy usage.
 - Unknown/unavailable: report the problem and finish a safe checkpoint.
 - Override: follow the user's explicit scope; never change settings silently.
 
+A later delivered valid Normal, Warning or configured-override decision
+explicitly supersedes earlier Usage Guard quota restrictions, not other
+instructions or permissions. Continue only authorized work at the current
+decision's limits. A user resume, date change or silence alone is not recovery.
+
 Do not interrupt commands, discard work, control unrelated tasks, or weaken
-self-review. Alerts arrive at tool boundaries and cannot reserve quota.
+self-review. Decisions arrive at user-message and tool boundaries and cannot reserve quota.
 
 ## Explicit diagnostics only
 
@@ -37,5 +42,6 @@ a saved opt-in is insufficient. Never consume reset credits automatically.
 
 Install the packaged agent-alerts folder and run Install-CodexAlerts.ps1 with
 an available Node executable. Launch `codex` from PowerShell, then enter `/hooks`
-inside Codex and review the two Usage Guard entries. Do not bypass trust or
+inside Codex and review the three Usage Guard entries, including UserPromptSubmit
+for idle-task recovery. Do not bypass trust or
 trust unrelated hooks. The app setup guide contains the complete instructions.

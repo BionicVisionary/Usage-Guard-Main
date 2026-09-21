@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { assess, deliver, readObservation } from '../scripts/agent-alerts/usage-guard-alert.mjs';
@@ -24,10 +25,23 @@ test('hook installer preserves unrelated hooks, is idempotent and refuses confli
   assert.deepEqual(installed.hooks.Stop, [unrelated]);
   assert.equal(installed.hooks.PreToolUse.length, 1);
   assert.equal(installed.hooks.PostToolUse.length, 1);
+  assert.equal(installed.hooks.UserPromptSubmit.length, 1);
   assert.equal(installed.hooks.PreToolUse[0].hooks[0].timeout, 3);
   const before = fs.readFileSync(hooksFile);
   result = run(); assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(fs.readFileSync(hooksFile), before);
+  // An older reviewed definition used the same Node path without quotes.
+  // Preserve it exactly, while adding a missing prompt hook.
+  if (!/[\s&|<>^();`$]/.test(process.execPath)) {
+    const legacy = installed.hooks.PreToolUse[0].hooks[0].command.replace(/^"([^"]+)" /, '$1 ');
+    installed.hooks.PreToolUse[0].hooks[0].command = legacy;
+    delete installed.hooks.UserPromptSubmit;
+    fs.writeFileSync(hooksFile, JSON.stringify(installed));
+    result = run(); assert.equal(result.status, 0, result.stderr);
+    installed = JSON.parse(fs.readFileSync(hooksFile, 'utf8'));
+    assert.equal(installed.hooks.PreToolUse[0].hooks[0].command, legacy);
+    assert.equal(installed.hooks.UserPromptSubmit.length, 1);
+  }
   installed.hooks.PreToolUse[0].hooks[0].command = 'different usage-guard-alert.mjs';
   fs.writeFileSync(hooksFile, JSON.stringify(installed));
   const conflicting = fs.readFileSync(hooksFile);
@@ -48,8 +62,9 @@ function state(decision = 'normal', five = 80, weekly = 40) {
 }
 const event = { hook_event_name: 'PreToolUse', session_id: 'test-session', turn_id: 'test-turn',
   tool_input: { command: 'SECRET_DO_NOT_PERSIST' } };
-test('normal is silent and explicit user override is respected', () => {
-  assert.equal(assess(settings, state(), now).message, '');
+test('normal and explicit override provide scoped recovery notices', () => {
+  assert.match(assess(settings, state(), now).message, /restrictions are lifted/);
+  assert.match(assess({ ...settings, unrestrictedDevelopmentOverride: true }, null, now).message, /not evidence of a quota reset/);
   assert.equal(assess({ ...settings, unrestrictedDevelopmentOverride: true }, state(), now).level, 'override');
   assert.equal(assess({ ...settings, unrestrictedDevelopmentOverride: true }, null, now).level, 'override');
 });
@@ -110,7 +125,7 @@ test('alerts are deduplicated across pre/post, escalate and remain task-specific
 test('normal recovery rearms an alert and corrupt receipt does not hide warning', () => {
   const dir = path.join(root, 'recovery'); const warning = assess(settings, state('warning', 30), now);
   deliver(event, warning, dir, now);
-  assert.deepEqual(deliver(event, assess(settings, state(), now), dir, now + 1), {});
+  assert.match(deliver(event, assess(settings, state(), now), dir, now + 1).hookSpecificOutput.additionalContext, /restrictions are lifted/);
   assert.ok(deliver(event, warning, dir, now + 2).hookSpecificOutput);
   fs.writeFileSync(path.join(dir, fs.readdirSync(dir)[0]), 'broken');
   assert.ok(deliver(event, warning, dir, now + 3).hookSpecificOutput);
@@ -158,4 +173,82 @@ test('a new settings override is honored even without a state file', () => {
   const dir = path.join(root, 'override'); fs.mkdirSync(dir);
   fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({ ...settings, unrestrictedDevelopmentOverride: true }));
   assert.equal(readObservation(dir, now).level, 'override');
+});
+
+test('idle resume delivers current recovery without a tool or any ledger access', () => {
+  const dir = path.join(root, 'not-a-ledger-directory'); fs.writeFileSync(dir, 'untouched');
+  const prompt = { ...event, hook_event_name: 'UserPromptSubmit', prompt: 'PRIVATE_PROMPT' };
+  for (const observation of [assess(settings, state(), now),
+    assess(settings, state('warning', 30), now),
+    assess({ ...settings, unrestrictedDevelopmentOverride: true }, null, now)]) {
+    for (let i = 0; i < 2; i++) {
+      const out = deliver(prompt, observation, dir, now + i);
+      assert.equal(out.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
+      assert.match(out.hookSpecificOutput.additionalContext, /restrictions are lifted/);
+      assert.match(out.hookSpecificOutput.additionalContext, /supersedes only earlier Usage Guard/);
+      assert.equal(out.decision, undefined); assert.equal(out.continue, undefined);
+      assert.doesNotMatch(JSON.stringify(out), /PRIVATE_PROMPT/);
+    }
+  }
+  assert.equal(fs.readFileSync(dir, 'utf8'), 'untouched');
+});
+
+test('tool recovery follows every restrictive state; steady allowing states are quiet', () => {
+  for (const [i, restriction] of [assess(settings, state('safe_wrap', 25), now),
+    assess(settings, state('safe_wrap', 20), now), assess(settings, null, now)].entries()) {
+    for (const recovery of [assess(settings, state(), now),
+      assess({ ...settings, unrestrictedDevelopmentOverride: true }, null, now),
+      assess(settings, state('warning', 30), now)]) {
+      const dir = path.join(root, `transition-${i}-${recovery.level}`);
+      assert.ok(deliver(event, restriction, dir, now).hookSpecificOutput);
+      assert.match(deliver(event, recovery, dir, now + 1).hookSpecificOutput.additionalContext, /restrictions are lifted/);
+      assert.deepEqual(deliver({ ...event, hook_event_name: 'PostToolUse' }, recovery, dir, now + 2), {});
+      if (recovery.level !== 'warning') assert.deepEqual(deliver({ ...event, turn_id: 'next' }, recovery, dir, now + 3), {});
+    }
+  }
+});
+
+test('prompt recovery is not hidden by old receipts, active locks, or earlier delivery', () => {
+  const dir = path.join(root, 'old-ledger'); fs.mkdirSync(dir);
+  const ledger = path.join(dir, crypto.createHash('sha256').update(event.session_id).digest('hex') + '.json');
+  fs.writeFileSync(ledger, JSON.stringify({ key: `${event.turn_id}:normal:`, level: 'normal', emittedAt: now }));
+  const normal = assess(settings, state(), now);
+  assert.ok(deliver(event, normal, dir, now).hookSpecificOutput);
+  fs.writeFileSync(ledger + '.lock', '');
+  const prompt = { ...event, hook_event_name: 'UserPromptSubmit' };
+  assert.match(deliver(prompt, normal, dir, now).hookSpecificOutput.additionalContext, /restrictions are lifted/);
+  assert.match(deliver(prompt, normal, dir, now + 1).hookSpecificOutput.additionalContext, /restrictions are lifted/);
+  fs.unlinkSync(ledger + '.lock');
+  fs.writeFileSync(ledger, 'broken');
+  assert.ok(deliver(event, normal, dir, now).hookSpecificOutput);
+});
+
+test('override off reapplies stop and stale data never claims recovery', () => {
+  const dir = path.join(root, 'override-off');
+  deliver(event, assess({ ...settings, unrestrictedDevelopmentOverride: true }, null, now), dir, now);
+  const stopped = deliver(event, assess(settings, state('safe_wrap', 80, 5), now), dir, now + 1);
+  assert.match(stopped.hookSpecificOutput.additionalContext, /Critical SafeWrap: urgently/);
+  for (const bad of [assess(settings, state(), now + 120001), assess(settings, null, now),
+    assess({ ...settings, unrestrictedDevelopmentOverride: 'yes' }, null, now)]) {
+    const msg = deliver({ ...event, hook_event_name: 'UserPromptSubmit' }, bad, dir, now).hookSpecificOutput.additionalContext;
+    assert.match(msg, /No recovery is established/);
+    assert.doesNotMatch(msg, /restrictions are lifted/);
+  }
+});
+
+test('real stdin prompt protocol returns recovery without persisting a prompt or receipt', () => {
+  const local = path.join(root, 'prompt-process');
+  const dir = path.join(local, 'OpenAI', 'CodexUsageGuard'); fs.mkdirSync(dir, { recursive: true });
+  const configured = { ...settings, unrestrictedDevelopmentOverride: true };
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify(configured));
+  const proc = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/agent-alerts/usage-guard-alert.mjs', import.meta.url))], {
+    input: JSON.stringify({ ...event, hook_event_name: 'UserPromptSubmit', prompt: 'PRIVATE_PROMPT' }),
+    encoding: 'utf8', timeout: 3000, env: { ...process.env, LOCALAPPDATA: local }
+  });
+  assert.equal(proc.status, 0, proc.stderr);
+  const output = JSON.parse(proc.stdout);
+  assert.equal(output.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
+  assert.match(output.hookSpecificOutput.additionalContext, /restrictions are lifted/);
+  assert.doesNotMatch(proc.stdout, /PRIVATE_PROMPT/);
+  assert.deepEqual(fs.readdirSync(dir), ['settings.json']);
 });

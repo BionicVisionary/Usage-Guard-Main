@@ -4,10 +4,12 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const EVENTS = new Set(['PreToolUse', 'PostToolUse']);
+const EVENTS = new Set(['UserPromptSubmit', 'PreToolUse', 'PostToolUse']);
 const MAX_FILE = 256 * 1024;
+const POLICY = 'This current Usage Guard decision supersedes only earlier Usage Guard quota notices in this task, including earlier SafeWrap/Critical SafeWrap or unavailable notices. It does not change other instructions, permissions or user scope. Obey it until a later Usage Guard decision; silence is not recovery. ';
+const notice = message => POLICY + message;
 const percent = n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100;
-const unknown = why => ({ level: 'unknown', message: `Usage Guard: monitoring unavailable (${why}). Finish the current safe checkpoint; start no new phase. Use the installed guard once to diagnose/refresh (one 30-second retry only for startup timeout). Do not change thresholds or create a wake-up.` });
+const unknown = why => ({ level: 'unknown', message: notice(`Usage Guard: monitoring unavailable (${why}). No recovery is established. Finish the current safe checkpoint; start no new phase. Report the monitor problem; do not run routine quota checks, change thresholds or create a wake-up.`) });
 
 export function assess(settings, state, now = Date.now()) {
   if (settings?.schemaVersion !== 1) return unknown('invalid schema');
@@ -18,7 +20,7 @@ export function assess(settings, state, now = Date.now()) {
   if (Object.values(limits).some(a => !a.every(percent) || !(a[0] >= a[1] && a[1] >= a[2])) ||
       !Number.isInteger(settings.pollingIntervalSeconds) || settings.pollingIntervalSeconds < 30 || settings.pollingIntervalSeconds > 300 ||
       typeof settings.unrestrictedDevelopmentOverride !== 'boolean') return unknown('invalid settings');
-  if (settings.unrestrictedDevelopmentOverride) return { level: 'override', message: '' };
+  if (settings.unrestrictedDevelopmentOverride) return { level: 'override', message: notice('Usage Guard: user-configured override is active. Earlier Usage Guard quota restrictions are lifted. Continue only user-authorized work. This is not evidence of a quota reset or available quota. Do not change settings or run routine quota checks.') };
   if (state?.schemaVersion !== 1) return unknown('invalid schema');
   const c = state.current;
   if (!c || ['unknown', 'provenance_mismatch'].includes(c.decision)) return unknown('helper has no trusted decision');
@@ -42,7 +44,7 @@ export function assess(settings, state, now = Date.now()) {
   const atSafe = windows.some(w => w.remainingPercent <= limits[w.kind][1]);
   const atWarning = windows.some(w => w.remainingPercent <= limits[w.kind][0]);
   if ((atSafe && c.decision !== 'safe_wrap') || (atWarning && c.decision === 'normal')) return unknown('decision awaits applied settings');
-  if (c.decision === 'normal') return { level: 'normal', message: '' };
+  if (c.decision === 'normal') return { level: 'normal', message: notice(`Usage Guard: fresh validated Normal decision. Earlier Usage Guard quota restrictions are lifted; user-authorized bounded work may continue. No routine quota checks or automatic wake-up. Observed ${new Date(c.observedAtUtc).toISOString()}.`) };
   const critical = c.decision === 'safe_wrap' && (c.reason === 'critical_buffer_reached' ||
     windows.some(w => w.remainingPercent <= limits[w.kind][2]));
   const level = critical ? 'critical_safe_wrap' : c.decision;
@@ -51,9 +53,9 @@ export function assess(settings, state, now = Date.now()) {
     return `${kind === 'five_hour' ? '5-hour' : 'weekly'} ${w.remainingPercent}% remaining; configured Warning/SafeWrap/Critical ${limits[kind].join('/')}%`;
   }).join('. ');
   const action = level === 'warning'
-    ? 'Warning: use short recoverable checkpoints, avoid a large new phase, and prepare a concise handoff. Rely on delivered alerts; do not run routine live, cached or receipt checks.'
+    ? 'Warning: earlier Usage Guard stop restrictions are lifted; authorized bounded work may continue. Use short recoverable checkpoints, avoid a large new phase, and prepare a concise handoff. Rely on delivered alerts; do not run routine live, cached or receipt checks.'
     : `${critical ? 'Critical SafeWrap: urgently' : 'SafeWrap:'} finish only the current coherent checkpoint, save the handoff, do necessary cleanup and become idle. Start no new phase or delegation. Do not interrupt commands, kill tasks, change settings, or schedule a wake-up.`;
-  return { level, signature: JSON.stringify(limits), message: `Usage Guard — ${action} ${summary}. Observed ${new Date(c.observedAtUtc).toISOString()}.` };
+  return { level, signature: JSON.stringify(limits), message: notice(`Usage Guard — ${action} ${summary}. Observed ${new Date(c.observedAtUtc).toISOString()}.`) };
 }
 
 function readJson(file) {
@@ -80,6 +82,13 @@ export function deliver(event, observation, ledgerDir, now = Date.now()) {
   if (!EVENTS.has(event?.hook_event_name) || typeof event.session_id !== 'string' ||
       !event.session_id || event.session_id.length > 200 || typeof event.turn_id !== 'string' ||
       !event.turn_id || event.turn_id.length > 200) return {};
+  const output = () => ({ hookSpecificOutput: { hookEventName: event.hook_event_name,
+    additionalContext: observation.message } });
+  // Every user submission must receive the current decision BEFORE reasoning
+  // or tools. Never deduplicate this against a receipt: it is not a delivery
+  // acknowledgement. This read-only path survives missing/unwritable ledgers
+  // and parallel tool locks, and never stores the prompt.
+  if (event.hook_event_name === 'UserPromptSubmit') return output();
   const id = crypto.createHash('sha256').update(event.session_id).digest('hex');
   fs.mkdirSync(ledgerDir, { recursive: true });
   if (fs.lstatSync(ledgerDir).isSymbolicLink()) throw new Error('invalid ledger');
@@ -97,13 +106,17 @@ export function deliver(event, observation, ledgerDir, now = Date.now()) {
   try {
     let previous = {};
     try { previous = readJson(ledgerFile); } catch { /* first event or corrupt receipt */ }
-    const key = `${event.turn_id}:${observation.level}:${observation.signature ?? ''}`;
+    // Versioned keys re-emit recovery for pre-fix receipts whose Normal/override
+    // level was recorded even though no message was sent. Quiet allowing states
+    // deduplicate across turns; each new user prompt already receives a notice.
+    const quiet = ['normal', 'override'].includes(observation.level);
+    const key = `v2:${quiet ? '' : event.turn_id}:${observation.level}:${observation.signature ?? ''}`;
     const urgent = ['safe_wrap', 'critical_safe_wrap'].includes(observation.level);
     const repeat = urgent && now - (previous.emittedAt ?? 0) >= 60000;
     const changed = previous.key !== key;
     const emit = !!observation.message && (changed || repeat);
-    // A minute-spaced health receipt lets a task distinguish working hooks from
-    // merely installed hooks. No transcripts, prompts or arguments persist.
+    // Local deduplication only, not proof of model-visible delivery.
+    // No transcripts, prompts or arguments persist.
     if (changed || emit || now - (previous.observedEventAt ?? 0) >= 60000) {
       const receipt = { key, emittedAt: emit ? now : (previous.emittedAt ?? 0), observedEventAt: now,
         level: observation.level, event: event.hook_event_name };
@@ -111,8 +124,7 @@ export function deliver(event, observation, ledgerDir, now = Date.now()) {
       fs.writeFileSync(tmp, JSON.stringify(receipt), { flag: 'wx', mode: 0o600 });
       fs.renameSync(tmp, ledgerFile);
     }
-    return emit ? { hookSpecificOutput: { hookEventName: event.hook_event_name,
-      additionalContext: observation.message } } : {};
+    return emit ? output() : {};
   } finally { fs.closeSync(fd); fs.unlinkSync(lock); }
 }
 

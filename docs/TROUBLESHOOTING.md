@@ -1,5 +1,21 @@
 # Troubleshooting
 
+## Codex remains stopped after usage recovery or an enabled override
+
+Install the updated `agent-alerts` integration and run its
+`Install-CodexAlerts.ps1`. Open `codex` from PowerShell, then enter `/hooks`
+inside Codex and review the Usage Guard **UserPromptSubmit** entry as well as
+its two tool entries. Submit a message in the same task after review. The new
+entry delivers the current helper decision before the task decides whether to
+use tools. Normal, Warning and configured override explicitly lift earlier
+Usage Guard stop notices; stale/unknown state does not.
+
+Older integrations sent no recovery notice and ran only around tools, which
+could leave an idle task stuck even after quota recovery. Do not repeatedly
+change thresholds, delete quota state, bypass hook trust, or copy credentials
+to work around this. A runtime without UserPromptSubmit support requires a
+compatible Codex update. Receiver tests alone do not verify desktop delivery.
+
 ## Provider is detected but usage is Unknown
 
 Detection and usage capability are deliberately separate. For Claude, press

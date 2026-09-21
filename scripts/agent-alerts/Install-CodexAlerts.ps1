@@ -36,15 +36,19 @@ if (-not $Configuration.PSObject.Properties['hooks']) {
 }
 if ($Configuration.hooks -isnot [pscustomobject]) { throw 'Invalid hooks object; existing file was not changed.' }
 $Command = '"' + $NodePath + '" "' + $ReceiverPath + '"'
+# Preserve an already reviewed exact-path definition with an unquoted Node path
+# only when that path has no whitespace or shell metacharacters. Do not rewrite
+# existing trusted definitions merely to normalize quoting.
+$LegacyCommand = if ($NodePath -notmatch '[\s&|<>^();`$]') { $NodePath + ' "' + $ReceiverPath + '"' } else { $Command }
 $Changed = $false
-foreach ($EventName in @('PreToolUse', 'PostToolUse')) {
+foreach ($EventName in @('PreToolUse', 'PostToolUse', 'UserPromptSubmit')) {
     $Entries = @()
     if ($Configuration.hooks.PSObject.Properties[$EventName]) { $Entries = @($Configuration.hooks.$EventName) }
     $Present = $false
     foreach ($Entry in $Entries) {
         foreach ($Handler in @($Entry.hooks)) {
             if ($Handler.PSObject.Properties['command'] -and $Handler.command -like '*usage-guard-alert.mjs*') {
-                if ($Handler.command -ne $Command -or $Entry.PSObject.Properties['matcher'] -or
+                if (($Handler.command -ne $Command -and $Handler.command -ne $LegacyCommand) -or $Entry.PSObject.Properties['matcher'] -or
                     $Handler.type -ne 'command' -or $Handler.timeout -ne 3 -or $Handler.additionalContextLimit -ne 500) {
                     throw 'A different Usage Guard hook already exists. Review it before migration; no hooks were changed.'
                 }
@@ -73,5 +77,5 @@ if ($Changed) {
         if (Test-Path -LiteralPath $Temporary) { Remove-Item -LiteralPath $Temporary }
     }
 }
-Write-Output 'Configured both Usage Guard hooks. No trust records, settings or credentials were changed.'
-Write-Output 'Next: run codex in PowerShell, then enter /hooks INSIDE Codex. Review and trust only these PreToolUse/PostToolUse entries. Keep Usage Guard monitoring on.'
+Write-Output 'Configured three Usage Guard hooks. No trust records, settings or credentials were changed.'
+Write-Output 'Next: run codex in PowerShell, then enter /hooks INSIDE Codex. Review and trust only the Usage Guard UserPromptSubmit/PreToolUse/PostToolUse entries. UserPromptSubmit delivers recovery before tools; existing installations must review this new entry. Keep Usage Guard monitoring on.'

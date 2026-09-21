@@ -134,3 +134,30 @@ No model-generated periodic monitoring task, reset wake-up or reset credit was
 created/consumed. Existing idle tasks were not woken for test messages.
 Backups of the global agreement and the two changed shortcuts are under
 `D:\Codex\Backups\UsageGuard\2026-09-11-agent-alerts`.
+# Recovery repair checkpoint — 2026-09-21
+
+- Source and installed receiver now support UserPromptSubmit and explicit
+  Normal/Warning/configured-override recovery. Twenty receiver/installer tests
+  passed. `dotnet build CodexUsageGuard.sln -c Release --no-restore --nologo`
+  passed with 0 warnings and 0 errors. This is not a full host/UI/Sandbox suite.
+- Installed receiver, installer script, README and example matched source at
+  deployment. Existing PreToolUse/PostToolUse definitions stayed identical;
+  only UserPromptSubmit was added. User reported reviewing the new hook, and
+  the desktop runtime's fresh `hooks/list` metadata returned all three enabled,
+  non-managed and trusted. No trust record was edited or bypassed.
+- A genuine tool-boundary configured-override recovery notice reached the
+  coordinator model. The existing idle target task did NOT receive prompt-time
+  recovery in the bounded test and correctly made no tool call. No interview
+  research was resumed. A fresh CLI resume was refused with active-writer
+  conflict; no second writer was forced. Prompt-time installed acceptance is
+  still incomplete. Next: normal desktop restart after checkpointing, then one
+  same-task harmless Get-Location verification conditional on actual recovery.
+- The real state tested was user-configured override, not observed quota-reset
+  recovery. Normal/Warning/stale/override-off transitions have synthetic proof,
+  not end-to-end desktop proof. No user setting or latch was changed.
+- Global agreement and installed skill describe scoped recovery and preserve
+  the no-routine-check policy. Other global agreement sections were byte-identical.
+  Local pre-change backups: D:\Codex\Backups\UsageGuard\2026-09-21-recovery.
+- App binary and immutable v0.005 release were not replaced; this deployment is
+  the separate hook integration. Embedded setup text is updated in source for
+  a future reviewed app/package release, not in the running v0.005 executable.

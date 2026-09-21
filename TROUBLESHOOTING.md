@@ -15,7 +15,7 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   it read the wrapper but had no recorded invocation during that turn.
 - **Fix prepared:** `scripts/agent-alerts/usage-guard-alert.mjs` reads the
   existing monitored decision and emits short Codex PreToolUse/PostToolUse
-  context. Normal stays silent; Warning, SafeWrap and Critical escalate with
+  context. Unchanged Normal stays quiet at tool boundaries; Warning, SafeWrap and Critical escalate with
   per-task deduplication. It performs no network/model calls or task starts.
   Stale/invalid data produces an explicit fallback alert.
 - **Evidence:** Synthetic receiver tests cover configured thresholds, latches,
@@ -29,6 +29,31 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   tool boundaries, not during a long command or tool-free reasoning. Launch
   `codex` from PowerShell first; `/hooks` belongs inside its interactive prompt.
   See scripts/agent-alerts/VERIFICATION.md for the unresolved provenance result.
+
+## Idle Codex task remains restricted after allowing recovery (2026-09-21)
+
+- **Confirmed cause:** the old receiver returned empty messages for Normal and
+  configured override, so it never superseded earlier restrictive context.
+  Tool-only delivery cannot reach a task that refuses before using a tool.
+- **Repair:** explicit scoped recovery messages; UserPromptSubmit delivers the
+  current validated decision before tools, independent of receipt/lock state.
+  Quiet tool-boundary recovery uses versioned deduplication to migrate old
+  silent receipts. Settings, latches, live reader and trust records are unchanged.
+- **Evidence:** 20 receiver tests passed, including idle prompt recovery,
+  stale/invalid data, override off, lost/corrupt/old receipts, lock contention,
+  real stdin protocol, setup idempotence and preservation of other hooks.
+  Release solution build passed with zero warnings/errors. Actual runtime
+  tool-boundary recovery reached the coordinator. A fresh app-server metadata
+  read recognized all three installed definitions as enabled and trusted.
+- **Remaining runtime gap:** the already-loaded desktop task still received no
+  prompt recovery. A separate CLI resume was safely refused with active-writer
+  conflict. Cold reload is the next test, not a proven fix. Finish/checkpoint
+  active work, ask the user to restart Codex normally, then verify in the same
+  task. Do not kill the desktop, steal its writer lock, or loop test prompts.
+- **Avoid:** treating trust metadata/receipts as delivery proof, inferring quota
+  reset, changing thresholds or polling the provider. A direct Node spawn of
+  cmd.exe without correct verbatim Windows argument handling failed even for
+  the known-working old hook; it is not evidence of Codex's launcher behavior.
 
 ## Approved secondary display is unavailable on a single-monitor host
 
