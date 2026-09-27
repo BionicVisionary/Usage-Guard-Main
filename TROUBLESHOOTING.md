@@ -45,11 +45,18 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   Release solution build passed with zero warnings/errors. Actual runtime
   tool-boundary recovery reached the coordinator. A fresh app-server metadata
   read recognized all three installed definitions as enabled and trusted.
-- **Remaining runtime gap:** the already-loaded desktop task still received no
-  prompt recovery. A separate CLI resume was safely refused with active-writer
-  conflict. Cold reload is the next test, not a proven fix. Finish/checkpoint
-  active work, ask the user to restart Codex normally, then verify in the same
-  task. Do not kill the desktop, steal its writer lock, or loop test prompts.
+- **Windows launch defect confirmed September 24:** restart did not repair it.
+  An isolated ephemeral read-only runtime captured UserPromptSubmit failure,
+  exit code 1. Direct PowerShell launch reproduced Unexpected token for the
+  bare quoted Node executable followed by a script argument. The working
+  unquoted executable command returned valid recovery JSON.
+- **Launch repair:** setup now uses a safe unquoted executable or the PowerShell
+  call operator `&` before a quoted executable. It migrates only the exact
+  known broken definition and preserves existing working entries. Rejects
+  interpolation-sensitive path characters. Normal trust review of the modified
+  definition remains mandatory. Installer regression now executes its generated
+  command against isolated state and verifies known-definition migration;
+  all 20 receiver tests passed. Do not loop restarts or second-writer resumes.
 - **Avoid:** treating trust metadata/receipts as delivery proof, inferring quota
   reset, changing thresholds or polling the provider. A direct Node spawn of
   cmd.exe without correct verbatim Windows argument handling failed even for
@@ -301,6 +308,24 @@ End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
   boundary; locator and executable hashes are still validated.
 
 ## Installed helper or CLI provenance cannot be resolved
+
+- **Installer ownership check:** Extra diagnostic `VERIFICATION.md` or
+  `hooks.example.json` in an older agent-alerts deployment causes a deliberate
+  unowned-file refusal before shutdown. Confirm their exact ownership/content,
+  preserve those documents outside the application directory, then retry the
+  normal installer. Do not loosen the executable/directory ownership checks.
+  This exact migration succeeded on 2026-09-27 with settings/hooks unchanged.
+
+- **2026-09-27 verified update:** The installed CLI is now 0.156.1. Its SHA-256
+  `70bcb05f9bf1a4e7306edd0cd1b57d02af3267ad02a34b26f45c8c4bb20a3301`
+  matches the official `openai/codex` `rust-v0.156.1` Windows x64 executable
+  asset digest, and Authenticode is Valid for OpenAI OpCo, LLC. v0.006 updates
+  the pin without changing thresholds or accepting arbitrary future binaries.
+  Trusting Codex hooks and approving the reader executable are separate steps.
+  Future CLI replacement can still require a reviewed pin update; never disable
+  the identity check or approve a local hash without independent verification.
+  The new protocol supports `excludeResetCreditDetails: true`, which avoids a
+  separate credit-detail request during background reads. No model turn is used.
 
 - **2026-09-11 verified update:** Codex 0.154.0 replaced the pinned 0.149.1.
   Authenticode was Valid for OpenAI OpCo, LLC and its local SHA-256 exactly

@@ -18,7 +18,10 @@ public static class AppServerProtocol
         "{\"method\":\"initialized\",\"params\":{}}";
 
     public static string RateLimitsRequest =>
-        "{\"method\":\"account/rateLimits/read\",\"id\":2}";
+        // The approved CLI otherwise makes an extra reset-credit detail request.
+        // Monitoring needs quota windows only, never credit identities or actions.
+        "{\"method\":\"account/rateLimits/read\",\"id\":2," +
+        "\"params\":{\"excludeResetCreditDetails\":true}}";
 
     public static ProtocolResponseKind ClassifyResponse(
         string json,

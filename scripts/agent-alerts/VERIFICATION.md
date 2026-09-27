@@ -1,5 +1,63 @@
 # Local receiver verification — 2026-09-11
 
+## Current repair checkpoint — 2026-09-27
+
+- Installed acceptance completed: exact D:\Codex\Apps\Usage Guard executable
+  is v0.006, SHA-256
+  79e6c7d61c46f05db652ddc9e397b8e2bf57bb8a6045a1a01644b53e163d397c,
+  running as PID 29760 with --background. Its automatic monitor saved a
+  successful/high/observed_now reading at 2026-09-27T16:09:16+10:00 (5-hour
+  15%, weekly 87%); decision remains the user's override. Settings and hook
+  definitions were byte-identical across installation. Installed receiver
+  SHA-256 matches source (2ac6656e3b92976f90f19ae4c77b68867b9b14b27591f2b4aa0ded18c00fa139).
+- Final unsigned installer: artifacts/UsageGuard-Setup-0.006.exe, SHA-256
+  b78f42b047fe4114708291af2de797040bf6615f740763ba2a24bc5deccb0da3.
+  ZIP SHA-256 970f64ea49f01297c11b341469a956dedad880fe512867fd555f505277e68ca9.
+  Extracted payload matched the manifest; packaged setup guide names v0.006
+  and all three hooks. Package's install script succeeded, preserving old app
+  in D:\Codex\Apps\Usage Guard.backup-2026-09-27-v0.005-to-v0.006.
+  GUI bootstrapper, fresh-machine install and Sandbox/UI acceptance not rerun.
+- Initial install refused two earlier diagnostic files outside its allowlist.
+  Preserved only hooks.example.json and VERIFICATION.md under
+  D:\Codex\Artifacts\UsageGuard\native-route-2026-09-27\prior-installed-documents,
+  then installation succeeded. No allowlist/security bypass. Keep diagnostic
+  documents outside the installed app folder in future.
+- Natural quota threshold/agent wrapping acceptance remains user testing after
+  the user disables their override. No global agreement, thresholds, override,
+  latch, schedule or reset-credit change. No interview chat resumed.
+
+- User enabled the development override; a genuine delivered override notice
+  lifted the earlier unavailable restriction. Agent did not change settings.
+- Native Codex usage tool works on demand. Official App Server documentation
+  lists account/rateLimits/updated, but a separate verified 0.156.1 observer
+  received no unsolicited updates in 45 seconds after one successful read.
+  This is not proof that notifications never work or that quota changed during
+  the probe; it is insufficient evidence for a reliable passive-only monitor.
+- CLI 0.156.1 has Valid OpenAI OpCo, LLC Authenticode and exactly matches the
+  official openai/codex rust-v0.156.1 Windows x64 executable asset digest:
+  70bcb05f9bf1a4e7306edd0cd1b57d02af3267ad02a34b26f45c8c4bb20a3301.
+- v0.006 retains local monitor sampling and adds excludeResetCreditDetails:true.
+  Official versioned account protocol and processor source confirm that this
+  skips the separate credit-detail request. No model turn, reset consumption,
+  thread creation, private API or credential copying is involved.
+- Release build passed with zero warnings/errors. All 21 Node integration tests
+  passed in one run, covering inclusive thresholds for both windows, critical
+  escalation, stale/malformed data, recovery, deduplication, actual PowerShell
+  hook execution, spaces in paths and preservation of unrelated hooks.
+- Full C# runner still has the same nine storage-ACL unauthorized-operation
+  failures recorded in September. Security was not weakened. After the protocol
+  change, all 49 core synthetic tests passed, including exact request shape.
+- Built v0.006 live adapter returned available/high/observed_now with no error
+  at 2026-09-27T06:03:44Z (five-hour 36%, weekly 90%). This was a separate
+  development build, not the then-running v0.005 installation.
+- The user's later enabling of the corrected prompt hook resolved the previous
+  launcher gate: September 24 ephemeral runtime reported prompt hook completed
+  and its model acknowledged recovery; current coordinator also receives genuine
+  override notices. No normal-reset or natural low-quota wrap E2E claim is made.
+- Interview chats are out of scope per the user. Do not resume them or repeat
+  the old restart/trust-menu workflow. Existing hook definitions are unchanged.
+
+
 ## Deferred user-reported UI defect — v0.005
 
 After disabling the override, the user reported that clicking away from Usage
@@ -161,3 +219,34 @@ Backups of the global agreement and the two changed shortcuts are under
 - App binary and immutable v0.005 release were not replaced; this deployment is
   the separate hook integration. Embedded setup text is updated in source for
   a future reviewed app/package release, not in the running v0.005 executable.
+# Windows hook launcher repair — 2026-09-24
+
+The September 21 cold-reload hypothesis was disproven by a post-restart test.
+An ephemeral read-only app-server probe on September 24 captured an actual
+UserPromptSubmit failure with exit code 1 and no model-visible notice.
+Direct PowerShell execution reproduced the parser failure: a bare quoted
+executable is an expression, not an invocation with a following script argument.
+The same receiver launched with the existing safe unquoted Node path succeeded.
+
+Setup now generates a safe unquoted executable or uses `&` for a quoted path,
+and migrates only its exact known broken definition. Existing working tool
+definitions are preserved. No trust or quota settings are changed. Regression
+coverage now launches the generated command through PowerShell with isolated
+settings, verifies recovery JSON, and verifies migration/idempotence/conflict
+handling. All 20 receiver tests passed. Source receiver logic and app binary
+are unchanged in this launcher repair; prior build evidence still applies.
+
+Corrected setup and UserPromptSubmit definition are deployed. Normal user trust
+review and subsequent real task delivery verification remain pending at this
+checkpoint; do not mistake the launch fixture for installed runtime acceptance.
+
+Additional September 24 evidence: the spaced-executable-path forwarding-shim
+test passed separately (21 passing test cases total across the focused runs).
+Runtime metadata correctly distinguishes modified, trusted, and enabled states;
+the read-only probe now checks these before spending a model turn. Two reported
+reviews still returned modified. During subsequent terminal-menu inspection,
+exit text was interpreted as menu shortcuts and changed the new entry to trusted
+but disabled. This was disclosed immediately, the exact owned diagnostic CLI
+was closed, and user review/enable confirmation was requested. No direct trust
+record edit or trust-bypass flag was used. Do not treat that accidental menu
+transition as completed user acceptance. No further automated trust-menu input.

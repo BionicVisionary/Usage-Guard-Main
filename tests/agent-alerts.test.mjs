@@ -27,9 +27,29 @@ test('hook installer preserves unrelated hooks, is idempotent and refuses confli
   assert.equal(installed.hooks.PostToolUse.length, 1);
   assert.equal(installed.hooks.UserPromptSubmit.length, 1);
   assert.equal(installed.hooks.PreToolUse[0].hooks[0].timeout, 3);
+  // Test the generated Windows command, not just its JSON definition.
+  const local = path.join(root, 'launch-settings');
+  const guard = path.join(local, 'OpenAI', 'CodexUsageGuard'); fs.mkdirSync(guard, { recursive: true });
+  fs.writeFileSync(path.join(guard, 'settings.json'), JSON.stringify({ ...settings, unrestrictedDevelopmentOverride: true }));
+  const launch = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', installed.hooks.UserPromptSubmit[0].hooks[0].command], {
+    input: JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: 'isolated-launch', turn_id: 'isolated-launch' }),
+    env: { ...process.env, LOCALAPPDATA: local }, encoding: 'utf8', timeout: 10000
+  });
+  assert.equal(launch.status, 0, launch.stderr);
+  assert.match(JSON.parse(launch.stdout).hookSpecificOutput.additionalContext, /restrictions are lifted/);
   const before = fs.readFileSync(hooksFile);
   result = run(); assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(fs.readFileSync(hooksFile), before);
+  const correctCommand = installed.hooks.UserPromptSubmit[0].hooks[0].command;
+  // Regression for the 2026-09-21 installer: bare quoted executable in PS.
+  const receiverPath = fileURLToPath(new URL('../scripts/agent-alerts/usage-guard-alert.mjs', import.meta.url));
+  installed.hooks.UserPromptSubmit[0].hooks[0].command = `"${process.execPath}" "${receiverPath}"`;
+  const originalPre = JSON.stringify(installed.hooks.PreToolUse);
+  fs.writeFileSync(hooksFile, JSON.stringify(installed));
+  result = run(); assert.equal(result.status, 0, result.stderr);
+  installed = JSON.parse(fs.readFileSync(hooksFile, 'utf8'));
+  assert.equal(installed.hooks.UserPromptSubmit[0].hooks[0].command, correctCommand);
+  assert.equal(JSON.stringify(installed.hooks.PreToolUse), originalPre);
   // An older reviewed definition used the same Node path without quotes.
   // Preserve it exactly, while adding a missing prompt hook.
   if (!/[\s&|<>^();`$]/.test(process.execPath)) {
@@ -173,6 +193,28 @@ test('a new settings override is honored even without a state file', () => {
   const dir = path.join(root, 'override'); fs.mkdirSync(dir);
   fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({ ...settings, unrestrictedDevelopmentOverride: true }));
   assert.equal(readObservation(dir, now).level, 'override');
+});
+
+test('installer invokes an executable path containing spaces with PowerShell call operator', () => {
+  const config = path.join(root, 'spaced-config'); fs.mkdirSync(config);
+  // A tiny forwarding shim avoids copying the Node binary or requiring symlinks.
+  const shim = path.join(root, 'node test shim.cmd');
+  fs.writeFileSync(shim, `@"${process.execPath}" %*\r\n`);
+  const installer = fileURLToPath(new URL('../scripts/agent-alerts/Install-CodexAlerts.ps1', import.meta.url));
+  const setup = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', installer,
+    '-NodePath', shim, '-CodexConfigDirectory', config], { encoding: 'utf8', timeout: 10000 });
+  assert.equal(setup.status, 0, setup.stderr);
+  const command = JSON.parse(fs.readFileSync(path.join(config, 'hooks.json'), 'utf8')).hooks.UserPromptSubmit[0].hooks[0].command;
+  assert.ok(command.startsWith('& "'));
+  const local = path.join(root, 'space-launch-state');
+  const guard = path.join(local, 'OpenAI', 'CodexUsageGuard'); fs.mkdirSync(guard, { recursive: true });
+  fs.writeFileSync(path.join(guard, 'settings.json'), JSON.stringify({ ...settings, unrestrictedDevelopmentOverride: true }));
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+    input: JSON.stringify({ ...event, hook_event_name: 'UserPromptSubmit' }),
+    env: { ...process.env, LOCALAPPDATA: local }, encoding: 'utf8', timeout: 10000
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, /restrictions are lifted/);
 });
 
 test('idle resume delivers current recovery without a tool or any ledger access', () => {

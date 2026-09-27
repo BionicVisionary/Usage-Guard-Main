@@ -15,7 +15,7 @@ if ([string]::IsNullOrWhiteSpace($NodePath)) {
 $NodePath = [IO.Path]::GetFullPath($NodePath)
 $ReceiverPath = Join-Path $PSScriptRoot 'usage-guard-alert.mjs'
 foreach ($ExecutableFile in @($NodePath, $ReceiverPath)) {
-    if ($ExecutableFile -match '["%!?\r\n]' -or -not (Test-Path -LiteralPath $ExecutableFile -PathType Leaf)) {
+    if ($ExecutableFile -match '["%!?`$\r\n]' -or -not (Test-Path -LiteralPath $ExecutableFile -PathType Leaf)) {
         throw 'Node or the receiver is missing, or its path cannot safely be quoted. Install Node and pass -NodePath with its absolute path.'
     }
 }
@@ -35,11 +35,10 @@ if (-not $Configuration.PSObject.Properties['hooks']) {
     $Configuration | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
 }
 if ($Configuration.hooks -isnot [pscustomobject]) { throw 'Invalid hooks object; existing file was not changed.' }
-$Command = '"' + $NodePath + '" "' + $ReceiverPath + '"'
-# Preserve an already reviewed exact-path definition with an unquoted Node path
-# only when that path has no whitespace or shell metacharacters. Do not rewrite
-# existing trusted definitions merely to normalize quoting.
-$LegacyCommand = if ($NodePath -notmatch '[\s&|<>^();`$]') { $NodePath + ' "' + $ReceiverPath + '"' } else { $Command }
+# Codex launches Windows hooks through PowerShell: a quoted executable needs
+# the call operator. Preserve already-working unquoted definitions when safe.
+$QuotedCommand = '"' + $NodePath + '" "' + $ReceiverPath + '"'
+$Command = if ($NodePath -match '^[A-Za-z0-9_:\\/.-]+$') { $NodePath + ' "' + $ReceiverPath + '"' } else { '& ' + $QuotedCommand }
 $Changed = $false
 foreach ($EventName in @('PreToolUse', 'PostToolUse', 'UserPromptSubmit')) {
     $Entries = @()
@@ -48,9 +47,15 @@ foreach ($EventName in @('PreToolUse', 'PostToolUse', 'UserPromptSubmit')) {
     foreach ($Entry in $Entries) {
         foreach ($Handler in @($Entry.hooks)) {
             if ($Handler.PSObject.Properties['command'] -and $Handler.command -like '*usage-guard-alert.mjs*') {
-                if (($Handler.command -ne $Command -and $Handler.command -ne $LegacyCommand) -or $Entry.PSObject.Properties['matcher'] -or
+                if (($Handler.command -ne $Command -and $Handler.command -ne $QuotedCommand) -or $Entry.PSObject.Properties['matcher'] -or
                     $Handler.type -ne 'command' -or $Handler.timeout -ne 3 -or $Handler.additionalContextLimit -ne 500) {
                     throw 'A different Usage Guard hook already exists. Review it before migration; no hooks were changed.'
+                }
+                # Migrate only the exact known broken quoted-path definition.
+                # Definition changes require normal Codex trust review again.
+                if ($Handler.command -eq $QuotedCommand) {
+                    $Handler.command = $Command
+                    $Changed = $true
                 }
                 $Present = $true
             }

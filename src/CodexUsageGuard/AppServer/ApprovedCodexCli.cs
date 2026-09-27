@@ -6,12 +6,12 @@ namespace CodexUsageGuard.AppServer;
 
 public static class ApprovedCodexCli
 {
-    // Reviewed against openai/codex rust-v0.154.0 release asset digest and
-    // a valid OpenAI OpCo, LLC Authenticode signature on 2026-09-11.
-    public const string Version = "0.154.0";
+    // Reviewed against openai/codex rust-v0.156.1 release asset digest and
+    // a valid OpenAI OpCo, LLC Authenticode signature on 2026-09-27.
+    public const string Version = "0.156.1";
     public const string Distribution = "official_user_scoped_windows";
     public const string ExecutableSha256 =
-        "be96b992178b1e467c225800da0d65f2c86d5eba1ef0b14632f65db381cbdfde";
+        "70bcb05f9bf1a4e7306edd0cd1b57d02af3267ad02a34b26f45c8c4bb20a3301";
 
     public static string ExecutablePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

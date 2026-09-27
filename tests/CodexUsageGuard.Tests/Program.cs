@@ -529,6 +529,10 @@ public static class Program
         Equal(AppServerProtocol.InitializeRequest, transport.Writes[0]);
         Equal(AppServerProtocol.InitializedNotification, transport.Writes[1]);
         Equal(AppServerProtocol.RateLimitsRequest, transport.Writes[2]);
+        using var request = JsonDocument.Parse(transport.Writes[2]);
+        Equal("account/rateLimits/read", request.RootElement.GetProperty("method").GetString());
+        True(request.RootElement.GetProperty("params")
+            .GetProperty("excludeResetCreditDetails").GetBoolean());
         True(transport.InputCompleted);
     }
 

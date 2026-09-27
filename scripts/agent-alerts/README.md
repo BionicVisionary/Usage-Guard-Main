@@ -39,7 +39,10 @@ Node on PATH or in Codex's dependency runtime; otherwise install Node.js and pas
 `-NodePath 'C:\Program Files\nodejs\node.exe'`. It preserves unrelated hooks,
 backs up changed hooks.json and never changes trust records. Re-running an
 identical setup is a no-op. Conflicting existing Usage Guard entries require
-review rather than silent replacement. Then follow steps 3–5 below.
+review rather than silent replacement. The exact broken quoted-executable
+definition from the September 21 setup is migrated to a valid PowerShell
+command; review that modified entry again in `/hooks`. Other definitions are
+preserved. Then follow steps 3–5 below.
 
 1. Copy `usage-guard-alert.mjs` to `D:\Codex\Apps\Usage Guard\agent-alerts`.
    Keep it separate from source branches so a checkout cannot change it.
@@ -56,6 +59,10 @@ review rather than silent replacement. Then follow steps 3–5 below.
    UserPromptSubmit entry too. Do not use Trust all for unrelated hooks, mark
    them managed, bypass trust, or edit trust records. Changed definitions require
    another review. Exit the terminal Codex interface when finished.
+   Opening the review with Enter is not approval: on that hook's detail screen,
+   follow `t` to trust when offered, then confirm its checkbox is enabled.
+   A trusted but unchecked hook does not run. Navigate back with Escape before
+   entering slash commands; do not type `/quit` into the hook details menu.
 5. Keep Usage Guard monitoring enabled. Use an ordinary task and observe its
    delivered alert at a naturally reached threshold. The user is handling this
    acceptance test. Installation or a receipt alone does not prove an agent
@@ -63,7 +70,7 @@ review rather than silent replacement. Then follow steps 3–5 below.
 
 On another computer, install the helper and Node, then configure these absolute
 paths for that computer. Installing the receiver does not establish hook trust.
-The v0.005 live reader requires the official Windows x64 Codex CLI 0.154.0 at
+The v0.006 live reader requires the official Windows x64 Codex CLI 0.156.1 at
 `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`. Other versions fail closed;
 use a reviewed helper update, never replace its expected hash with an unverified
 value. Sign in using Codex itself. Never copy credentials, quota state,
@@ -96,10 +103,12 @@ UserPromptSubmit entry is reviewed and available in that Codex runtime, then
 submit a message in the same task. Merely installing a hook or seeing a Normal
 tray state is not proof that recovery reached it. Never edit trust records or
 bypass review. Synthetic tests prove receiver behavior, not desktop delivery.
-If an already-loaded desktop task still receives no notice after review,
-checkpoint active work and restart Codex normally before retesting the same
-task. A cold reload is a diagnostic step, not a guarantee. Do not run a second
-writer against that task or kill the app to force a reload.
+If a task still receives no notice after review, inspect actual hook failure
+output instead of repeating restarts. In the September 21 integration a bare
+quoted executable failed to launch under PowerShell. The September 24 setup
+fix preserves working unquoted commands and uses `&` when the executable must
+be quoted. The corrected definition needs normal trust review again. Do not
+run a second writer against the task or kill the app to force a reload.
 
 To disable deliberately, remove only these handlers from hooks.json. This stops
 automatic delivery; do not silently replace it with agent polling.

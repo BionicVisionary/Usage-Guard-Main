@@ -113,3 +113,13 @@ the user's explicit approval to merge and publish the source to `main`.
   deleting an existing app/skill when staging fails before promotion.
 - Installation and live reading verified on the current host; broader storage
   tests and isolated Sandbox QA have unresolved failures. See receiver verification.
+# v0.006 — 2026-09-27
+
+- Restore live readings after the official CLI updated to independently verified
+  0.156.1; retain exact executable identity checks and all user settings.
+- Skip the CLI's unnecessary reset-credit-detail lookup on each observation.
+- Include the corrected Windows prompt-hook launcher, explicit recovery notices,
+  and prompt-time delivery so idle tasks can receive the current decision.
+- Keep automatic local monitoring and user-configured threshold alerts; native
+  on-demand usage tools do not replace them. No new agent polling or schedules.
+- See scripts/agent-alerts/VERIFICATION.md for evidence and remaining QA limits.

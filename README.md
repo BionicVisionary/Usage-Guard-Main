@@ -1,6 +1,6 @@
 # Usage Guard
 
-Usage Guard v.0.005 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
+Usage Guard v.0.006 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
 
 The helper does not read credentials, authentication files, cookies, browser state, chats, account identifiers, screenshots, or unrelated UI. Provider monitoring has no direct HTTP client or private endpoint; the only HTTP capability is the separate bounded public GitHub release checker and user-confirmed installer download. It has no task/thread control, reset-credit action, service, administrator component, or production simulation switch. App Server responses exist only in bounded process memory until exactly one 300-minute and one 10,080-minute quota window are normalized.
 
@@ -139,9 +139,11 @@ Normal enforcement is the clean-install default. The user may deliberately enabl
 
 ## Security and provenance
 
-The supported source is documented in OpenAI's [Codex App Server documentation](https://learn.chatgpt.com/docs/app-server). Production sends only `initialize`, `initialized`, and one `account/rateLimits/read`.
+The supported source is documented in OpenAI's [Codex App Server documentation](https://learn.chatgpt.com/docs/app-server). Production sends only `initialize`, `initialized`, and one `account/rateLimits/read` with `excludeResetCreditDetails: true`. The approved CLI skips its separate reset-credit-detail request; the helper never consumes a reset credit or starts a model turn.
 
-The helper launches only `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe app-server --listen stdio://`. It pins official CLI `0.154.0` and SHA-256 `be96b992178b1e467c225800da0d65f2c86d5eba1ef0b14632f65db381cbdfde`. Path or digest drift becomes `Provenance mismatch`/Unknown; the helper does not search PATH, auto-update, or auto-trust a changed binary.
+Codex also exposes an on-demand agent usage tool and App Server usage-change notifications. These are not a guarantee of passive account-wide delivery to an independent helper: a bounded 45-second v0.156.1 observer received no unsolicited usage updates. Keep the local monitor's configured sampling and trusted hook delivery; do not replace it with routine agent checks or a passive-only listener on that evidence. Hooks deliver at prompt/tool boundaries, not during tool-free reasoning or an in-flight command. Reading and monitoring do not start AI turns, but processing delivered alert text still adds context; no zero-token or exact-threshold guarantee is made.
+
+The helper launches only `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe app-server --listen stdio://`. It pins official CLI `0.156.1` and SHA-256 `70bcb05f9bf1a4e7306edd0cd1b57d02af3267ad02a34b26f45c8c4bb20a3301`. Path or digest drift becomes `Provenance mismatch`/Unknown; the helper does not search PATH, auto-update, or auto-trust a changed binary.
 
 The earlier accessibility reader remains feasibility source/test evidence only.
 The production executable exposes no accessibility or window-state command.
