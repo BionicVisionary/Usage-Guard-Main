@@ -1,7 +1,8 @@
-# v0.007 local candidate verification — 2026-09-28
+# v0.007 verification — 2026-09-28
 
-This is a branch candidate, not a published update. The installed v0.006 app,
-user settings, thresholds, hooks and override were not changed in this pass.
+The isolated build and QA evidence below was gathered before the later local
+upgrade and public-release approval. It must not be read as a real host
+click-away-and-back test.
 
 - Release solution build: succeeded with 0 warnings and 0 errors.
 - The non-visible `--ui-viewport-test` passed locally without activating a
@@ -18,14 +19,22 @@ user settings, thresholds, hooks and override were not changed in this pass.
   Guest networking, clipboard and vGPU were disabled. A brief initial Sandbox
   splash on the primary display cannot be ruled out.
 - Source app SHA-256: `29f858e6fc77c2d2f971fbfd91067a37e620dbdd9089d5e9878764efd5f5e22d`.
-  Local ZIP SHA-256: `cd2e83845ee66479571e5254820b3523677e6f07de0c4836b5f758a4e3aa6363`.
-  Unsigned local installer SHA-256: `36840fa46f473e69c3ae8f369a3315c8831d9f3574b4ad57e557aa463084d47e`.
-  The installer and checksum are under `artifacts/` on the D-drive checkout.
+  Final ZIP SHA-256: `501fdefa100b0b5d205e450520364d9405ca99007e30ee0bfec5a431f7816fa3`.
+  Final unsigned installer SHA-256:
+  `e5a602a4d554282f6e6605e67707e7214f77884539d071e6a280d02cbda17bd1`.
+  The installer checksum matches, its embedded ZIP matches the final ZIP, and
+  the archive manifest/app hash matches the installed app binary.
 
 Evidence is in `artifacts/sandbox-evidence-20260928-062059-f9f06697/`.
 The UI test does not establish a real human click-away-and-back result on the
 installed host app. The full production C# runner was not repeated here; its
 previous nine storage-environment failures remain a separate unresolved test
-class. No fresh-machine installer test, public release, or installed v0.007
-acceptance is claimed. Main and the GitHub release channel require explicit
-user approval after branch review.
+class. No fresh-machine GUI installer or real click-away-and-back acceptance is
+claimed.
+
+The approved local upgrade installed the same v0.007 app hash at
+`D:\Codex\Apps\Usage Guard`; the ownership locator, one exact background
+process, and the old v0.006 backup were verified. Settings and hook-definition
+SHA-256 values were unchanged. A fresh Normal decision was subsequently
+delivered by Usage Guard. This does not prove that an actual reactivation of
+the installed UI keeps the user's scroll position.

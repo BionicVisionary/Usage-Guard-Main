@@ -121,8 +121,9 @@ the user's explicit approval to merge and publish the source to `main`.
   no horizontal overflow at the supported minimum window size.
 - Exercise viewport restoration in isolated UI rendering. Repair the Windows
   Sandbox QA rollback invocation and retain sanitized failure diagnostics.
-- This branch package is a local candidate; main, the public release channel,
-  and the installed v0.006 helper are unchanged pending release approval.
+- Provide a self-contained, unsigned, user-scoped v0.007 package. Release notes
+  distinguish isolated QA evidence from checks that still need a real user
+  interaction or another computer.
 
 # v0.006 — 2026-09-27
 
