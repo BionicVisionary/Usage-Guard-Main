@@ -1,8 +1,8 @@
 # User-scoped installation
 
-## v0.006: Codex alerts on another computer
+## v0.007: Codex alerts on another computer
 
-Install `UsageGuard-Setup-0.006.exe` after comparing its companion SHA-256.
+Install `UsageGuard-Setup-0.007.exe` after comparing its companion SHA-256.
 Choose a user-writable folder (on this user's machine, D:\Codex\Apps\Usage Guard).
 The app is self-contained; the optional alert receiver separately requires Node.js.
 No credentials, saved quotas, settings, overrides, latches or hook trust records

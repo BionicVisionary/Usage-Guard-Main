@@ -159,6 +159,8 @@ $InstalledHashMatches = $false
 $RollbackExitCode = $null
 $InstallDirectoryPresentAfterRollback = $null
 $RollbackFailureCode = $null
+$RollbackFailureDetail = $null
+$UiRenderFailureCode = $null
 try {
     if (-not (Test-Path -LiteralPath $EvidenceRoot -PathType Container) -or
         @(Get-ChildItem -LiteralPath $EvidenceRoot -Force).Count -ne 0) {
@@ -227,6 +229,9 @@ try {
         -TimeoutMilliseconds 120000
     if ($Render.ExitCode -ne 0 -or
         -not (Test-Path -LiteralPath (Join-Path $UiEvidence 'ui-evidence.json') -PathType Leaf)) {
+        $UiRenderFailureCode = if ($Render.StandardError -match 'UI evidence render failed: ([A-Za-z]+): ([A-Za-z0-9 .-]{1,160})') {
+            "$($Matches[1]): $($Matches[2])"
+        } else { 'unclassified_ui_render_failure' }
         throw 'The isolated UI evidence render failed.'
     }
 
@@ -311,11 +316,16 @@ try {
     $Rollback = Invoke-OwnedProcess -FilePath $PowerShell -Arguments @(
         '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
         '-File', $RollbackScript,
-        '-RemoveSanitizedState',
-        '-Confirm:$false'
+        '-RemoveSanitizedState'
     ) -TimeoutMilliseconds 120000
     $RollbackExitCode = $Rollback.ExitCode
     if ($RollbackExitCode -ne 0) {
+        $RollbackFailureDetail = (($Rollback.StandardError + ' ' + $Rollback.StandardOutput) `
+            -replace '[A-Za-z]:\\[^\s:]+', '[path]' `
+            -replace '[^A-Za-z0-9 .:_-]', ' ').Trim()
+        if ($RollbackFailureDetail.Length -gt 300) {
+            $RollbackFailureDetail = $RollbackFailureDetail.Substring(0, 300)
+        }
         $RollbackFailureCode = if ($Rollback.StandardError -match 'being used by another process') {
             'installed_file_still_in_use'
         }
@@ -377,6 +387,8 @@ catch {
         rollbackExitCode = $RollbackExitCode
         installDirectoryPresentAfterRollback = $InstallDirectoryPresentAfterRollback
         rollbackFailureCode = $RollbackFailureCode
+        rollbackFailureDetail = $RollbackFailureDetail
+        uiRenderFailureCode = $UiRenderFailureCode
         guestGeneratedAtUtc = [DateTimeOffset]::UtcNow
     })
 }

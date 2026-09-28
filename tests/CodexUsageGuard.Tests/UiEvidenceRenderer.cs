@@ -213,6 +213,7 @@ internal static class UiEvidenceRenderer
                 scrollPanel.AutoScrollPosition = new Point(0, position);
                 scrollPanel.Update();
             }
+            VerifyReactivationKeepsViewport(form, selectedPage, scrollPanel, maximumScroll);
             scrollPanel.AutoScrollPosition = Point.Empty;
             scrollPanel.Update();
             scrollExercise.Stop();
@@ -256,6 +257,42 @@ internal static class UiEvidenceRenderer
         finally
         {
             monitor.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    private static void VerifyReactivationKeepsViewport(
+        MainForm form,
+        TabPage selectedPage,
+        Panel scrollPanel,
+        int maximumScroll)
+    {
+        if (maximumScroll < 160)
+        {
+            throw new InvalidOperationException("The page is too short to exercise reactivation scrolling.");
+        }
+
+        // Keep focus on a settings action below the viewport, just as when a
+        // user edits settings and then manually scrolls back up before switching apps.
+        var settingsAction = Descendants(selectedPage).OfType<Button>()
+            .Last(button => button.Text is "Apply settings" or "Apply provider settings");
+        settingsAction.Focus();
+        Application.DoEvents();
+        scrollPanel.AutoScrollPosition = new Point(0, 80);
+        Application.DoEvents();
+        var before = scrollPanel.AutoScrollPosition;
+
+        var flags = System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.NonPublic;
+        var deactivate = typeof(Form).GetMethod("OnDeactivate", flags) ??
+            throw new InvalidOperationException("WinForms deactivation event is unavailable.");
+        var activate = typeof(Form).GetMethod("OnActivated", flags) ??
+            throw new InvalidOperationException("WinForms activation event is unavailable.");
+        deactivate.Invoke(form, [EventArgs.Empty]);
+        scrollPanel.AutoScrollPosition = new Point(0, Math.Min(maximumScroll, 320));
+        activate.Invoke(form, [EventArgs.Empty]);
+        if (scrollPanel.AutoScrollPosition != before)
+        {
+            throw new InvalidOperationException("Reactivating Usage Guard changed the settings viewport.");
         }
     }
 

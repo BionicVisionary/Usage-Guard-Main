@@ -7,6 +7,23 @@ Never record credentials, raw authentication data, account identifiers, raw
 provider payloads, chat content, or unnecessary personal information here.
 End-user recovery guidance belongs in `docs/TROUBLESHOOTING.md`.
 
+## Windows Sandbox QA rollback rejects Confirm (2026-09-28)
+
+- **Symptom/scope:** The isolated UI render and guest install pass, but the
+  Sandbox QA driver reports `user_rollback` with a PowerShell error converting
+  a string to `SwitchParameter` for `Confirm`.
+- **Confirmed cause:** `Start-Process -ArgumentList` passed `-Confirm:$false`
+  as literal text to a new `powershell.exe -File` process. Replacing it with
+  literal `-Confirm:False` failed in the same way.
+- **Verified method:** Omit the redundant Confirm argument from the bounded
+  noninteractive guest rollback. The resulting locked-down Sandbox pass
+  verified guest install and rollback, 49 synthetic checks, UI render, and
+  second-monitor exact-client capture without host input.
+- **Avoid/limits:** Do not skip rollback or infer that a guest uninstall proves
+  an upgrade on this host. The UI reactivation regression exercises the form's
+  event handlers and viewport restoration; a real human click-away-and-back
+  remains a separate acceptance check.
+
 ## Tray warnings do not reach a running Codex task (2026-09-11)
 
 - **Cause:** The 2026-09-05 agreement removed checkpoint checks without an

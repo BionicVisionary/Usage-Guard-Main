@@ -11,7 +11,7 @@ namespace CodexUsageGuard.Core;
 public static class UsageGuardRelease
 {
     public const string ProductName = "Usage Guard";
-    public const string DisplayVersion = "0.006";
+    public const string DisplayVersion = "0.007";
     public const string RepositorySlug = "BionicVisionary/Usage-Guard-Main";
     public static readonly Uri ReleasePagePrefix = new(
         $"https://github.com/{RepositorySlug}/releases/");

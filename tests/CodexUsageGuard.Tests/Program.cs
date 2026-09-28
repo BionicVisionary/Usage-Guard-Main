@@ -47,7 +47,9 @@ public static class Program
 
         var sandboxCoreOnly = args.Length == 1 &&
             args[0].Equals("--sandbox-core-tests", StringComparison.Ordinal);
-        if (args.Length != 0 && !sandboxCoreOnly)
+        var uiViewportOnly = args.Length == 1 &&
+            args[0].Equals("--ui-viewport-test", StringComparison.Ordinal);
+        if (args.Length != 0 && !sandboxCoreOnly && !uiViewportOnly)
         {
             Console.Error.WriteLine("Unsupported test-runner arguments.");
             return 64;
@@ -106,7 +108,11 @@ public static class Program
             ("unknown live guard output drops quota values", UnknownLiveGuardOutputDropsQuotaValues),
             ("internal safe-wrap fixture does not start phase two", InternalSafeWrapFixtureStopsBeforePhaseTwo)
         };
-        var tests = sandboxCoreOnly
+        var tests = uiViewportOnly
+            ? ProductionTests.All().Where(test => test.Name.Equals(
+                "scroll viewport restores its exact prior position",
+                StringComparison.Ordinal)).ToArray()
+            : sandboxCoreOnly
             ? coreTests.Where(test => !test.Name.Equals(
                 "app server protocol emits only the approved requests",
                 StringComparison.Ordinal)).ToArray()

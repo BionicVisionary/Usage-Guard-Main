@@ -1,6 +1,6 @@
 # Usage Guard
 
-Usage Guard v.0.006 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
+Usage Guard v.0.007 is a user-scoped Windows status popup and notification-area monitor. Its verified Codex adapter reads sanitized 5-hour and weekly usage windows while Codex Settings is closed by launching the pinned official Codex CLI's documented App Server stdio mode for one bounded `account/rateLimits/read` observation per check.
 
 The helper does not read credentials, authentication files, cookies, browser state, chats, account identifiers, screenshots, or unrelated UI. Provider monitoring has no direct HTTP client or private endpoint; the only HTTP capability is the separate bounded public GitHub release checker and user-confirmed installer download. It has no task/thread control, reset-credit action, service, administrator component, or production simulation switch. App Server responses exist only in bounded process memory until exactly one 300-minute and one 10,080-minute quota window are normalized.
 

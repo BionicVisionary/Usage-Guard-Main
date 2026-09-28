@@ -70,7 +70,7 @@ preserved. Then follow steps 3–5 below.
 
 On another computer, install the helper and Node, then configure these absolute
 paths for that computer. Installing the receiver does not establish hook trust.
-The v0.006 live reader requires the official Windows x64 Codex CLI 0.156.1 at
+The v0.006 and v0.007 live readers require the official Windows x64 Codex CLI 0.156.1 at
 `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin\codex.exe`. Other versions fail closed;
 use a reviewed helper update, never replace its expected hash with an unverified
 value. Sign in using Codex itself. Never copy credentials, quota state,

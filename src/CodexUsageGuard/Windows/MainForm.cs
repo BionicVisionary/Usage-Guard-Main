@@ -56,6 +56,7 @@ public sealed class MainForm : Form
     private readonly Label _provenanceValue = NewWrapLabel("CLI provenance health");
     private readonly Label _monitoringValue = NewValueLabel("Monitoring status");
     private readonly Label _overrideBanner = NewWrapLabel("Unrestricted development override status");
+    private readonly Label _statusSummary = NewWrapLabel("Codex status at a glance");
     private readonly Button _detectProvidersButton = NewButton("Detect installed AIs", "Refresh safe installed AI provider detection");
     private readonly NumericUpDown _warningInput = NewPercentInput("Warning threshold percentage");
     private readonly NumericUpDown _safeWrapInput = NewPercentInput("SafeWrap threshold percentage");
@@ -84,6 +85,7 @@ public sealed class MainForm : Form
     private bool _automaticUpdateCheckInProgress;
     private ToolStripMenuItem? _trayMonitoringItem;
     private Task<IReadOnlyList<ProviderDetectionResult>>? _providerDetectionTask;
+    private SmoothScrollPanel? _scrollBeforeDeactivation;
 
     public MainForm(
         UsageMonitor monitor,
@@ -211,11 +213,6 @@ public sealed class MainForm : Form
         Show();
         WindowState = FormWindowState.Normal;
         Activate();
-        if (_providerTabs.SelectedTab?.Tag is AiProviderId providerId &&
-            _providerActionControls.TryGetValue(providerId, out var actions))
-        {
-            actions.CheckNow.Focus();
-        }
     }
 
     public void RequestExit()
@@ -263,10 +260,11 @@ public sealed class MainForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 4,
+            RowCount = 5,
             Padding = new Padding(12),
             AccessibleName = "Usage Guard content"
         };
+        outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -310,11 +308,24 @@ public sealed class MainForm : Form
         }
         providerActions.Resize += (_, _) => FitIsolationExplanation();
         FitIsolationExplanation();
+        _statusSummary.Margin = new Padding(3, 0, 3, 5);
+        _statusSummary.Font = new Font(Font, FontStyle.Bold);
+        void FitStatusSummary()
+        {
+            if (outer.ClientSize.Width > 120)
+            {
+                _statusSummary.MaximumSize = new Size(
+                    outer.ClientSize.Width - outer.Padding.Horizontal - 8, 0);
+            }
+        }
+        outer.Resize += (_, _) => FitStatusSummary();
+        FitStatusSummary();
         BuildProviderTabs();
         outer.Controls.Add(heading, 0, 0);
-        outer.Controls.Add(providerActions, 0, 1);
-        outer.Controls.Add(_providerTabs, 0, 2);
-        outer.Controls.Add(BuildApplicationActionRow(), 0, 3);
+        outer.Controls.Add(_statusSummary, 0, 1);
+        outer.Controls.Add(providerActions, 0, 2);
+        outer.Controls.Add(_providerTabs, 0, 3);
+        outer.Controls.Add(BuildApplicationActionRow(), 0, 4);
         return outer;
     }
 
@@ -1024,6 +1035,23 @@ public sealed class MainForm : Form
 
     private void WireEvents()
     {
+        Deactivate += (_, _) =>
+        {
+            _scrollBeforeDeactivation = _providerTabs.SelectedTab?.Controls
+                .OfType<SmoothScrollPanel>().FirstOrDefault();
+            _scrollBeforeDeactivation?.RememberViewport();
+        };
+        Activated += (_, _) =>
+        {
+            // WinForms restores the previously focused control before Activated.
+            // That focus restoration can scroll a long settings page elsewhere.
+            if (_scrollBeforeDeactivation is { IsDisposed: false } scroll &&
+                scroll.Visible)
+            {
+                scroll.RestoreViewport();
+            }
+            _scrollBeforeDeactivation = null;
+        };
         Shown += (_, _) =>
         {
             if (!string.IsNullOrWhiteSpace(_initialScreenDeviceName))
@@ -1590,6 +1618,22 @@ public sealed class MainForm : Form
     private void Render(SanitizedUsageState state)
     {
         var palette = _palette;
+        var summaryFiveHour = state.Windows?.SingleOrDefault(item =>
+            item.Kind == AppServerQuotaWindowKind.FiveHour);
+        var summaryWeekly = state.Windows?.SingleOrDefault(item =>
+            item.Kind == AppServerQuotaWindowKind.Weekly);
+        static string SummaryRemaining(SanitizedQuotaWindowState? window) => window is { } value
+            ? $"{value.RemainingPercent.ToString("0.#", CultureInfo.CurrentCulture)}%"
+            : "unavailable";
+        SetTextIfChanged(_statusSummary,
+            $"Codex: {DisplayState(state.Decision, state.Reason)}  ·  " +
+            $"5-hour {SummaryRemaining(summaryFiveHour)}  ·  " +
+            $"weekly {SummaryRemaining(summaryWeekly)}");
+        var summaryColor = StateColor(state, palette);
+        if (_statusSummary.ForeColor != summaryColor)
+        {
+            _statusSummary.ForeColor = summaryColor;
+        }
         SetTextIfChanged(_stateValue, DisplayState(state.Decision, state.Reason));
         var stateColor = StateColor(state, palette);
         if (_stateValue.ForeColor != stateColor)
@@ -2070,12 +2114,31 @@ public static class MonitoringTogglePolicy
 
 public sealed class SmoothScrollPanel : Panel
 {
+    private Point? _rememberedViewport;
+
     public SmoothScrollPanel()
     {
         ResizeRedraw = true;
     }
 
     public bool UsesNativePainting => !DoubleBuffered;
+
+    public void RememberViewport()
+    {
+        _rememberedViewport = IsHandleCreated ? AutoScrollPosition : null;
+    }
+
+    public void RestoreViewport()
+    {
+        if (_rememberedViewport is not { } position || !IsHandleCreated)
+        {
+            return;
+        }
+
+        // A read position is negative; the setter requires positive offsets.
+        AutoScrollPosition = new Point(-position.X, -position.Y);
+        _rememberedViewport = null;
+    }
 }
 
 public sealed class SmoothTableLayoutPanel : TableLayoutPanel

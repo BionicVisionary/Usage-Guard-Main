@@ -113,6 +113,17 @@ the user's explicit approval to merge and publish the source to `main`.
   deleting an existing app/skill when staging fails before promotion.
 - Installation and live reading verified on the current host; broader storage
   tests and isolated Sandbox QA have unresolved failures. See receiver verification.
+# v0.007 — 2026-09-28
+
+- Preserve the selected provider settings scroll position when Usage Guard is
+  reactivated, and stop forcing focus onto Check now when reopening the popup.
+- Add a compact status line above the provider tabs, with accessible text and
+  no horizontal overflow at the supported minimum window size.
+- Exercise viewport restoration in isolated UI rendering. Repair the Windows
+  Sandbox QA rollback invocation and retain sanitized failure diagnostics.
+- This branch package is a local candidate; main, the public release channel,
+  and the installed v0.006 helper are unchanged pending release approval.
+
 # v0.006 — 2026-09-27
 
 - Restore live readings after the official CLI updated to independently verified
